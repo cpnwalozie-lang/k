@@ -1,0 +1,2180 @@
+<!doctype html>
+<html lang="en-GB">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Future Chris</title>
+<meta name="description" content="A personal growth app: quests, a Future Me coach, notes and a journal.">
+<meta name="robots" content="noindex, nofollow">
+<meta name="theme-color" content="#0D1015">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Future Me">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" type="image/png" sizes="192x192" href="icon-192.png">
+<link rel="apple-touch-icon" href="icon-180.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Figtree:wght@400;500;600;700&display=swap">
+<style>:root{padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}body{margin:0}img{max-width:100%}[hidden]{display:none!important}</style>
+<style>
+/* Layout: one-screen phone app. Calm midnight palette: soft ink background, dusty blue for actions, soft lavender for progress and Future Me. Single dark theme by design. */
+:root{
+  color-scheme:dark;
+  --bg:#0D1015; --bg-tint:rgba(120,150,205,.11); --bg-tint-2:rgba(150,115,225,.12);
+  --surface:#151A22; --raised:#1B212B; --ink:#ECEEF2; --muted:#8E97A6; --line:#252C37; --line-2:#333C4A;
+  --accent:#8DB3E6; --accent-hi:#B3CBEF; --accent-ink:#0D1219; --accent-soft:rgba(141,179,230,.13);
+  --xp:#BBA4F2; --xp-soft:rgba(187,164,242,.14); --xp-ink:#150F22; --lilac:#DCD0FB;
+  --danger:#E58A8A; --danger-ink:#1A0B0B;
+  --scrim:rgba(5,7,10,.72);
+  --c-money:#8FD1B0; --c-learn:#8DB3E6; --c-create:#E5A3C3; --c-business:#9CCFD8; --c-health:#E8B98C; --c-life:#B8A8E3;
+  --shadow:0 1px 0 rgba(255,255,255,.03) inset,0 10px 30px rgba(0,0,0,.28);
+  --f-display:"Instrument Serif","Iowan Old Style","Palatino Linotype",Georgia,serif;
+  --f-body:"Figtree","Helvetica Neue","Segoe UI",system-ui,sans-serif;
+}
+*,*::before,*::after{box-sizing:border-box}
+html,body{height:100%}
+body{background:radial-gradient(70% 38% at 100% 0%,var(--bg-tint-2),transparent 70%),radial-gradient(110% 50% at 30% -10%,var(--bg-tint),transparent 65%),var(--bg);color:var(--ink);font-family:var(--f-body);font-size:15px;line-height:1.5;-webkit-font-smoothing:antialiased;overflow:hidden}
+button,input,textarea,select{font:inherit;color:inherit}
+button{cursor:pointer}
+:focus-visible{outline:2px solid var(--accent);outline-offset:2px;border-radius:8px}
+h1,h2,h3{font-family:var(--f-display);font-weight:400;text-wrap:balance;margin:0;line-height:1.1}
+p{margin:0}
+.num{font-variant-numeric:tabular-nums}
+.wrap{max-width:640px;margin:0 auto;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+::selection{background:var(--accent);color:var(--accent-ink)}
+
+/* App frame */
+.app{height:100%;display:grid;grid-template-rows:auto auto 1fr auto;grid-template-columns:minmax(0,1fr)}
+.topbar .wrap{display:flex;align-items:center;gap:12px;padding-block:14px 8px}
+.topbar h1{font-size:32px;flex:1;min-width:0;letter-spacing:-.01em}
+.lvl-chip{display:flex;align-items:center;gap:8px;background:var(--surface);border:1px solid var(--line);border-radius:999px;padding:4px 12px 4px 4px;font-size:13px;font-weight:600;color:var(--muted)}
+.lvl-chip b{display:grid;place-items:center;width:26px;height:26px;border-radius:50%;background:var(--xp-soft);color:var(--xp);font-size:12px}
+.icon-btn{display:grid;place-items:center;width:38px;height:38px;border-radius:50%;border:1px solid var(--line);background:var(--surface);color:var(--muted);flex:none}
+.icon-btn:hover{color:var(--ink);border-color:var(--line-2)}
+.icon-btn svg{width:18px;height:18px}
+.banner{background:rgba(229,138,138,.1);border-block:1px solid rgba(229,138,138,.3);font-size:13px}
+.banner .wrap{padding-block:8px}
+.main{min-height:0;min-width:0;position:relative}
+.view{height:100%;overflow-y:auto;-webkit-overflow-scrolling:touch;overscroll-behavior:contain}
+.view-inner{display:flex;flex-direction:column;gap:20px;padding-block:6px 32px}
+.tabbar{background:rgba(13,16,21,.92);border-top:1px solid var(--line);backdrop-filter:blur(10px)}
+.tabbar .wrap{display:grid;grid-template-columns:repeat(4,1fr);gap:4px;padding-block:6px 4px}
+.tab{display:flex;flex-direction:column;align-items:center;gap:3px;padding:6px 0 4px;border:0;background:none;color:var(--muted);font-size:11.5px;font-weight:500;border-radius:12px}
+.tab svg{width:21px;height:21px}
+.tab .pip{position:relative;width:48px;height:28px;display:grid;place-items:center;border-radius:999px;transition:background .2s}
+.tab[aria-current="page"]{color:var(--ink)}
+.tab[aria-current="page"] .pip{background:var(--accent-soft);color:var(--accent)}
+.pip .count{position:absolute;top:-5px;right:0;min-width:18px;height:18px;padding:0 5px;border-radius:9px;background:var(--xp);color:var(--xp-ink);font:700 11px/18px var(--f-body);text-align:center}
+
+/* Surfaces */
+.panel{background:var(--surface);border:1px solid var(--line);border-radius:20px;box-shadow:var(--shadow)}
+
+/* Hero (level card) */
+.hero{padding:18px;display:grid;grid-template-columns:auto 1fr;gap:16px;align-items:center;background:linear-gradient(155deg,rgba(141,179,230,.11),rgba(169,139,234,.13) 60%,rgba(169,139,234,.04)),var(--surface)}
+.ring{position:relative;width:78px;height:78px}
+.ring svg{width:78px;height:78px;transform:rotate(-90deg)}
+.ring .track{stroke:var(--xp-soft);fill:none}
+.ring .prog{stroke:var(--xp);fill:none;stroke-linecap:round;transition:stroke-dashoffset .6s ease}
+.ring .lvl{position:absolute;inset:0;display:grid;place-items:center;text-align:center;line-height:1}
+.ring .lvl small{display:block;font-size:10px;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);font-weight:600;margin-bottom:2px}
+.ring .lvl strong{font-family:var(--f-display);font-size:34px;font-weight:400}
+.hero-text{min-width:0;display:flex;flex-direction:column;gap:6px}
+.greet{color:var(--muted);font-size:13.5px}
+.rank{font-family:var(--f-display);font-size:28px;font-style:italic;line-height:1;color:var(--lilac)}
+.xpbar{height:5px;border-radius:99px;background:var(--xp-soft);overflow:hidden}
+.xpbar i{display:block;height:100%;background:linear-gradient(90deg,var(--accent),var(--xp));border-radius:99px;transition:width .6s ease}
+.xpline{font-size:12.5px;color:var(--muted)}
+.pills{grid-column:1/-1;display:flex;gap:8px;flex-wrap:wrap}
+.pill{display:inline-flex;align-items:center;gap:6px;background:rgba(255,255,255,.03);border:1px solid var(--line);border-radius:999px;padding:5px 11px;font-size:13px;color:var(--muted)}
+.pill svg{width:14px;height:14px}
+.pill.flame svg{color:var(--c-health)}
+.pill.xpp svg{color:var(--xp)}
+
+.qotd{margin:0;padding:4px 4px 4px 2px;text-align:center}
+.qotd p{font-family:var(--f-display);font-style:italic;font-size:22px;line-height:1.3}
+.qotd cite{display:block;margin-top:6px;font-style:normal;font-size:12.5px;color:var(--xp);letter-spacing:.04em}
+
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;border:0;border-radius:14px;padding:12px 16px;font-weight:600;font-size:15px;background:var(--accent);color:var(--accent-ink);transition:background .15s,transform .1s}
+.btn:hover{background:var(--accent-hi)}
+.btn:active{transform:scale(.98)}
+.btn svg{width:18px;height:18px}
+.btn.block{width:100%}
+.btn.ghost{background:transparent;color:var(--ink);border:1px solid var(--line-2)}
+.btn.ghost:hover{background:rgba(255,255,255,.04)}
+.btn.danger{background:var(--danger);color:var(--danger-ink)}
+.btn:disabled{opacity:.5;cursor:default}
+.btn.sm{padding:7px 13px;font-size:13px;border-radius:11px}
+
+.sec{display:flex;flex-direction:column;gap:10px}
+.sec-head{display:flex;align-items:baseline;gap:8px}
+.sec-head h2{font-size:24px;flex:1}
+.sec-head span{font-size:12.5px;color:var(--muted)}
+.list{display:flex;flex-direction:column;overflow:hidden}
+.empty{border:1px dashed var(--line-2);border-radius:18px;padding:16px;color:var(--muted);font-size:14px}
+.empty strong{color:var(--ink);font-weight:600}
+
+.task{display:grid;grid-template-columns:auto 1fr auto;gap:12px;align-items:center;padding:13px 12px 13px 15px;border-top:1px solid var(--line)}
+.task:first-child{border-top:0}
+.check{width:26px;height:26px;border-radius:50%;border:1.5px solid var(--line-2);background:transparent;display:grid;place-items:center;padding:0;transition:background .15s,border-color .15s,transform .15s}
+.check svg{width:15px;height:15px;opacity:0;color:var(--accent-ink)}
+.check:hover{border-color:var(--accent)}
+.check:active{transform:scale(.9)}
+.task.is-done .check{background:var(--accent);border-color:var(--accent)}
+.task.is-done .check svg{opacity:1}
+.task.is-done .task-title{color:var(--muted);text-decoration:line-through;text-decoration-color:var(--line-2)}
+.task-body{min-width:0;display:flex;flex-direction:column;gap:5px}
+.task-title{font-weight:500;overflow-wrap:anywhere}
+.meta{display:flex;gap:6px;flex-wrap:wrap;align-items:center}
+.cat{--c:var(--c-life);color:var(--c);background:color-mix(in srgb,var(--c) 12%,transparent);font-size:11.5px;font-weight:600;border-radius:999px;padding:1px 9px}
+.cat-money{--c:var(--c-money)} .cat-learn{--c:var(--c-learn)} .cat-create{--c:var(--c-create)} .cat-business{--c:var(--c-business)} .cat-health{--c:var(--c-health)} .cat-life{--c:var(--c-life)}
+.xp{font-size:11.5px;font-weight:600;color:var(--xp);font-variant-numeric:tabular-nums}
+.tag{font-size:11px;color:var(--muted);border:1px solid var(--line);border-radius:999px;padding:0 8px}
+.tag.promise{color:var(--accent);border-color:rgba(141,179,230,.45)}
+.tag.mine{color:var(--accent);border-color:rgba(141,179,230,.45)}
+.more{width:32px;height:32px;border-radius:50%;border:0;background:none;color:var(--muted);display:grid;place-items:center}
+.more svg{width:18px;height:18px}
+.confirm-row{display:flex;gap:6px}
+
+details.done-list summary{cursor:pointer;font-weight:500;font-size:14px;color:var(--muted);padding:4px 0;list-style:none}
+details.done-list summary::-webkit-details-marker{display:none}
+details.done-list summary::before{content:"+ ";color:var(--accent)}
+details.done-list[open] summary::before{content:"\2212  "}
+details.done-list .list{margin-top:8px}
+
+/* Future Me (chat) */
+#view-future{display:flex;flex-direction:column;overflow:hidden}
+#view-future[hidden]{display:none!important}
+.chat-head{border-bottom:1px solid var(--line)}
+.chat-head .wrap{display:flex;align-items:center;gap:12px;padding-block:8px 12px}
+.avatar{width:46px;height:46px;border-radius:50%;display:grid;place-items:center;background:linear-gradient(140deg,#A9C6EE,#B49CEE);color:var(--accent-ink);font-family:var(--f-display);font-size:24px;flex:none}
+.chat-who{flex:1;min-width:0}
+.chat-who h2{font-size:24px}
+.status{display:flex;align-items:center;gap:6px;min-height:18px;font-size:12.5px;color:var(--muted)}
+.status .on{width:7px;height:7px;border-radius:50%;background:var(--c-money);flex:none}
+.status .typing{color:var(--xp);font-style:italic}
+.chat-log{flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch;overscroll-behavior:contain}
+.chat-log .wrap{display:flex;flex-direction:column;gap:8px;padding-block:14px}
+.msg{max-width:84%;padding:10px 14px;border-radius:20px;font-size:15px;overflow-wrap:anywhere}
+.msg p+p,.msg p+ul,.msg ul+p,.msg ul+ul{margin-top:8px}
+.msg ul{margin:0;padding-left:18px;display:flex;flex-direction:column;gap:3px}
+.msg strong{font-weight:600;color:var(--accent-hi)}
+.msg.me{align-self:flex-end;background:linear-gradient(135deg,#93B8E8,#AE9CE8);color:var(--accent-ink);border-bottom-right-radius:6px;white-space:pre-wrap}
+.msg.me strong{color:inherit}
+.msg.fm{align-self:flex-start;background:var(--raised);border-bottom-left-radius:6px}
+.msg.checkin{background:linear-gradient(160deg,rgba(169,139,234,.16),rgba(141,179,230,.07)),var(--raised)}
+.msg.unread{box-shadow:inset 0 0 0 1px rgba(187,164,242,.5)}
+.msg .tm{display:block;font-size:10.5px;opacity:.55;margin-top:3px;text-align:right;font-variant-numeric:tabular-nums}
+.dayline{align-self:center;font-size:11.5px;color:var(--muted);padding:2px 10px;margin-block:6px}
+.seen{align-self:flex-end;font-size:11px;color:var(--muted);margin-top:-4px}
+.quick{display:flex;flex-wrap:wrap;gap:6px;margin-top:10px}
+.qr{border:1px solid var(--line-2);background:var(--surface);color:var(--ink);border-radius:999px;padding:6px 13px;font-size:13.5px;font-weight:500}
+.qr:hover{border-color:var(--accent)}
+.offers{display:flex;flex-direction:column;gap:6px;margin-top:10px}
+.offer{display:flex;align-items:center;gap:10px;text-align:left;border:1px solid var(--line-2);background:var(--surface);border-radius:14px;padding:8px 10px;font-size:13.5px;font-weight:500;width:100%}
+.offer .plus{flex:none;width:24px;height:24px;border-radius:50%;display:grid;place-items:center;background:var(--accent);color:var(--accent-ink);font-weight:700}
+.offer .ot{flex:1;min-width:0}
+.offer .ot small{display:block;color:var(--muted);font-size:12px}
+.offer[disabled]{cursor:default;opacity:.8}
+.offer[disabled] .plus{background:var(--xp-soft);color:var(--xp)}
+.dots{display:inline-flex;gap:4px;padding:4px 0}
+.dots i{width:7px;height:7px;border-radius:50%;background:var(--muted);animation:blink 1.2s infinite both}
+.dots i:nth-child(2){animation-delay:.2s}.dots i:nth-child(3){animation-delay:.4s}
+@keyframes blink{0%,80%,100%{opacity:.25}40%{opacity:1}}
+.intro{padding:16px;display:flex;flex-direction:column;gap:10px}
+.intro .vision{font-family:var(--f-display);font-size:19px;line-height:1.35}
+.intro .fine{font-size:12.5px;color:var(--muted)}
+.intro .rules{margin:0;padding-left:18px;display:flex;flex-direction:column;gap:2px}
+.qpills{display:flex;flex-wrap:wrap;gap:6px}
+.qpill{font-size:12.5px;color:var(--lilac);background:var(--xp-soft);border:1px solid rgba(187,164,242,.35);border-radius:999px;padding:3px 11px}
+.eyebrow{font-size:11.5px;letter-spacing:.12em;text-transform:uppercase;font-weight:600;color:var(--muted)}
+.composer{border-top:1px solid var(--line);background:rgba(13,16,21,.9)}
+.topics{display:flex;gap:6px;overflow-x:auto;padding-block:10px 0;scrollbar-width:none}
+.topics::-webkit-scrollbar{display:none}
+.topic{flex:none;border:1px solid var(--line);background:var(--surface);border-radius:999px;padding:6px 13px;font-size:13px;color:var(--ink)}
+.topic:hover{border-color:var(--line-2)}
+.topic.claude{color:var(--accent)}
+.inrow{display:flex;gap:8px;align-items:flex-end;padding-block:8px 10px}
+.inrow textarea{flex:1;min-width:0;resize:none;border:1px solid var(--line);background:var(--surface);border-radius:22px;padding:10px 15px;max-height:120px;line-height:1.35}
+.inrow textarea:focus{outline:none;border-color:var(--line-2)}
+.send{width:44px;height:44px;border-radius:50%;border:0;background:var(--accent);color:var(--accent-ink);display:grid;place-items:center;flex:none}
+.send svg{width:20px;height:20px}
+
+/* Forms */
+.card{padding:16px;display:flex;flex-direction:column;gap:12px}
+.card h3{font-size:22px}
+.seg{display:flex;gap:6px;flex-wrap:wrap}
+.seg label{position:relative}
+.seg input{position:absolute;opacity:0;pointer-events:none}
+.seg span{display:inline-block;padding:6px 13px;border-radius:999px;border:1px solid var(--line);background:transparent;font-size:13px;color:var(--muted)}
+.seg input:checked+span{background:var(--accent-soft);color:var(--accent);border-color:rgba(141,179,230,.5)}
+.seg input:focus-visible+span{outline:2px solid var(--accent);outline-offset:2px}
+.field{width:100%;border:1px solid var(--line);background:#11151C;border-radius:14px;padding:10px 13px}
+.field:focus{outline:none;border-color:var(--line-2);background:#131821}
+textarea.field{resize:vertical;min-height:90px;line-height:1.45}
+textarea.mono{font-family:ui-monospace,"SF Mono",Menlo,monospace;font-size:12px;min-height:140px}
+
+/* Notes */
+.books{display:flex;align-items:center;gap:8px}
+.booktabs{flex:1;min-width:0;display:grid;grid-template-columns:1fr 1fr;gap:4px;background:var(--surface);border:1px solid var(--line);border-radius:16px;padding:4px}
+.book{border:0;background:transparent;border-radius:12px;padding:9px 8px;display:flex;align-items:baseline;justify-content:center;gap:6px;color:var(--muted);min-width:0}
+.book b{font-family:var(--f-display);font-weight:400;font-size:20px;line-height:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.book span{font-size:12px}
+.book[aria-selected="true"]{background:linear-gradient(160deg,rgba(169,139,234,.14),transparent),var(--raised);color:var(--ink);box-shadow:0 1px 0 rgba(255,255,255,.04) inset}
+.filters{display:flex;gap:6px;overflow-x:auto;padding-bottom:2px;scrollbar-width:none}
+.filter{flex:none;border:1px solid var(--line);background:transparent;border-radius:999px;padding:6px 13px;font-size:13px;color:var(--muted)}
+.filter[aria-pressed="true"]{background:var(--accent-soft);color:var(--accent);border-color:rgba(141,179,230,.45)}
+.notes{display:flex;flex-direction:column;gap:10px}
+.nt{padding:16px;display:flex;flex-direction:column;gap:8px}
+.nt-kind{font-size:11px;letter-spacing:.12em;text-transform:uppercase;font-weight:600;color:var(--muted);display:flex;gap:6px;align-items:center}
+.nt-kind .pin-on{color:var(--accent)}
+.nt-text{white-space:pre-wrap;overflow-wrap:anywhere}
+.nt.quote .nt-text{font-family:var(--f-display);font-style:italic;font-size:22px;line-height:1.3;color:var(--lilac)}
+.nt.quote cite{font-style:normal;color:var(--muted);font-size:13px}
+.nt.win{background:linear-gradient(160deg,rgba(143,209,176,.08),transparent 60%),var(--surface)}
+.nt-foot{display:flex;align-items:center;gap:6px}
+.nt-foot time{flex:1;font-size:12px;color:var(--muted)}
+.mini{border:1px solid var(--line);background:transparent;border-radius:999px;padding:4px 11px;font-size:12.5px;color:var(--muted)}
+.mini.on{color:var(--accent);border-color:rgba(141,179,230,.5)}
+.mini.del{color:var(--danger)}
+
+/* Trophies */
+.stats{display:grid;grid-template-columns:repeat(2,1fr);gap:10px}
+.stat{padding:14px 16px}
+.stat small{display:block;font-size:12px;color:var(--muted)}
+.stat strong{font-family:var(--f-display);font-weight:400;font-size:32px;line-height:1.1}
+.cal{display:grid;grid-template-columns:repeat(7,1fr);gap:6px}
+.cal .dow{font-size:11px;color:var(--muted);text-align:center}
+.cal .d{aspect-ratio:1;max-width:100%;border-radius:50%;background:rgba(255,255,255,.03);display:grid;place-items:center;font-size:11.5px;color:var(--muted);font-variant-numeric:tabular-nums}
+.cal .d.on{background:var(--accent);color:var(--accent-ink);font-weight:600}
+.cal .d.today{box-shadow:inset 0 0 0 1.5px var(--xp)}
+.cal .d.blank{visibility:hidden}
+.badges{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
+.badge{padding:14px 8px;text-align:center;display:flex;flex-direction:column;align-items:center;gap:6px}
+.medal{width:44px;height:44px;border-radius:50%;display:grid;place-items:center;background:var(--xp-soft);color:var(--xp)}
+.medal svg{width:21px;height:21px}
+.badge b{font-size:13px;font-weight:600;line-height:1.2}
+.badge span{font-size:11.5px;color:var(--muted);line-height:1.25}
+.badge.locked{opacity:.55}
+.badge.locked .medal{background:rgba(255,255,255,.03);color:var(--muted)}
+.rung{display:grid;grid-template-columns:44px 1fr auto;gap:10px;align-items:center;padding:11px 16px;border-top:1px solid var(--line)}
+.rung:first-child{border-top:0}
+.rung .ln{font-size:13px;color:var(--muted);font-variant-numeric:tabular-nums}
+.rung .rn{font-weight:500}
+.rung .rx{font-size:12.5px;color:var(--muted);font-variant-numeric:tabular-nums}
+.rung.reached .ln{color:var(--xp)}
+.rung.current{background:var(--accent-soft)}
+.rung.current .rn::after{content:" · you are here";color:var(--accent);font-size:12.5px;font-weight:400}
+.rung.ceo .rn{font-family:var(--f-display);font-style:italic;font-size:18px;font-weight:400}
+.catrow{display:flex;align-items:center;gap:10px;padding:11px 16px;border-top:1px solid var(--line)}
+.catrow:first-child{border-top:0}
+.catrow span:last-child{margin-left:auto;font-weight:600;font-variant-numeric:tabular-nums}
+.muted{color:var(--muted);font-size:13px}
+.btnrow{display:flex;gap:8px}
+.btnrow .btn{flex:1}
+
+/* Teach screen */
+.teach-block{display:flex;flex-direction:column;gap:10px;background:var(--surface);border:1px solid var(--line);border-radius:18px;padding:14px}
+.teach-block h3,.lessons-head h3{font-size:22px}
+.lessons-head{display:flex;align-items:center;gap:8px}
+.lessons-head h3{flex:1}
+.inline{display:flex;gap:8px}
+.inline .field{flex:1;min-width:0}
+.test-out{background:var(--raised);border-radius:14px;padding:12px 14px;font-size:14px;display:flex;flex-direction:column;gap:6px}
+.test-out b.lbl2{font-size:11px;letter-spacing:.1em;text-transform:uppercase;color:var(--accent);font-weight:600}
+.test-out ul{margin:0;padding-left:18px}
+.test-out strong{font-weight:600;color:var(--accent-hi)}
+.rows{display:flex;flex-direction:column;border:1px solid var(--line);border-radius:14px;overflow:hidden}
+.rowbtn{display:flex;flex-direction:column;gap:3px;text-align:left;border:0;border-top:1px solid var(--line);background:transparent;padding:11px 13px;width:100%;min-width:0}
+.rowbtn:first-child{border-top:0}
+.rowbtn:hover{background:rgba(255,255,255,.03)}
+.rowbtn .rt{display:flex;gap:6px;align-items:center;flex-wrap:wrap;font-weight:600}
+.rowbtn .rs{display:block;width:100%;font-size:12.5px;color:var(--muted);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.rowbtn .rc{font-size:12px;color:var(--xp)}
+.rowbtn.off{opacity:.5}
+.picks{display:flex;flex-wrap:wrap;gap:6px}
+.pick{border:1px dashed var(--line-2);background:transparent;color:var(--ink);border-radius:999px;padding:5px 12px;font-size:12.5px}
+.pick:hover{border-style:solid;border-color:var(--accent)}
+.tones{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:8px}
+.tone{position:relative;display:flex;flex-direction:column;gap:2px;background:transparent;border:1px solid var(--line);border-radius:14px;padding:10px 12px;cursor:pointer}
+.tone input{position:absolute;opacity:0;pointer-events:none}
+.tone b{font-size:14px;font-weight:600}
+.tone small{font-size:12px;color:var(--muted);line-height:1.3}
+.tone:has(input:checked){border-color:rgba(141,179,230,.6);background:var(--accent-soft)}
+.tone:has(input:focus-visible){outline:2px solid var(--accent);outline-offset:2px}
+.hint{font-size:12px;color:var(--muted)}
+.switch{display:flex;align-items:flex-start;gap:10px;font-size:14px}
+.switch span{flex:1;min-width:0}
+.switch input{flex:none;width:20px;height:20px;margin:0;accent-color:var(--accent)}
+.vrow{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.vrow .muted{flex:1;min-width:140px}
+.timerow{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+.timerow .switch{flex:1;min-width:150px}
+.field.time{width:auto;min-width:110px;font-variant-numeric:tabular-nums}
+.field.time:disabled{opacity:.45}
+a.btn{text-decoration:none}
+.linkline{overflow-wrap:anywhere}
+
+/* Sheets, overlays, toast */
+.scrim{position:fixed;inset:0;background:var(--scrim);z-index:40;display:flex;align-items:flex-end;justify-content:center;backdrop-filter:blur(3px)}
+.sheet{background:var(--bg);border:1px solid var(--line);border-bottom:0;width:100%;max-width:640px;border-radius:26px 26px 0 0;max-height:92%;overflow-y:auto;padding-top:10px;padding-bottom:calc(20px + env(safe-area-inset-bottom,0px));padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));display:flex;flex-direction:column;gap:14px;animation:up .22s ease}
+.sheet > *{flex-shrink:0}
+@keyframes up{from{transform:translateY(24px);opacity:.6}to{transform:none;opacity:1}}
+.grab{width:40px;height:4px;border-radius:9px;background:var(--line-2);align-self:center}
+.sheet h2{font-size:32px}
+.lbl{font-size:12px;font-weight:600;color:var(--muted)}
+.sheet .row{display:flex;flex-direction:column;gap:6px}
+.sheet .actions{display:flex;gap:8px}
+.sheet .actions .btn{flex:1}
+.steps{margin:0;padding-left:20px;display:flex;flex-direction:column;gap:4px}
+.help-block{display:flex;flex-direction:column;gap:6px;background:var(--surface);border:1px solid var(--line);border-radius:16px;padding:14px}
+.help-block h3{font-size:22px}
+.scrim.center{align-items:center;padding:24px}
+.lu-card{position:relative;overflow:hidden;background:var(--surface);border:1px solid var(--line);border-radius:26px;padding:30px 22px 22px;text-align:center;width:100%;max-width:340px;display:flex;flex-direction:column;align-items:center;gap:6px;animation:pop .35s ease}
+@keyframes pop{from{transform:scale(.94);opacity:0}to{transform:none;opacity:1}}
+.lu-rays{position:absolute;left:50%;top:84px;width:260px;height:260px;margin:-130px 0 0 -130px;border-radius:50%;background:radial-gradient(circle,rgba(169,139,234,.28),transparent 65%);pointer-events:none}
+.lu-card > *:not(.lu-rays){position:relative}
+.lu-num{font-family:var(--f-display);font-size:88px;line-height:1}
+.lu-rank{font-family:var(--f-display);font-style:italic;font-size:30px;color:var(--lilac)}
+.lu-next{font-size:13.5px;color:var(--muted);margin-bottom:10px}
+.toast{position:fixed;left:50%;top:calc(12px + env(safe-area-inset-top,0px));transform:translateX(-50%);z-index:60;background:var(--raised);color:var(--ink);border:1px solid var(--line-2);border-radius:999px;padding:9px 16px;font-weight:500;font-size:14px;box-shadow:0 10px 30px rgba(0,0,0,.4);width:max-content;max-width:calc(100% - 32px);text-align:center;animation:drop .25s ease}
+.toast.toast-xp{background:var(--xp);color:var(--xp-ink);border-color:var(--xp)}
+@keyframes drop{from{transform:translate(-50%,-10px);opacity:0}to{transform:translate(-50%,0);opacity:1}}
+@media (prefers-reduced-motion: reduce){*,*::before,*::after{animation:none!important;transition:none!important}}
+</style>
+</head>
+<body>
+<div class="app">
+  <header class="topbar">
+    <div class="wrap">
+      <h1 id="viewTitle">Quests</h1>
+      <div class="lvl-chip" aria-label="Your level"><b class="num" id="chipLvl">1</b><span id="chipXp" class="num">0 XP</span></div>
+      <button class="icon-btn" id="helpBtn" aria-label="Put this app on your home screen">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="6" y="2.5" width="12" height="19" rx="2.5"/><path d="M10.5 18.5h3"/></svg>
+      </button>
+    </div>
+  </header>
+  <div class="banner" id="banner" hidden><div class="wrap" id="bannerText"></div></div>
+
+  <main class="main">
+    <!-- QUESTS -->
+    <section class="view" id="view-quests" aria-label="Quests">
+      <div class="wrap view-inner">
+        <div class="panel hero">
+          <div class="ring">
+            <svg viewBox="0 0 78 78" aria-hidden="true"><circle class="track" cx="39" cy="39" r="34" stroke-width="6"/><circle class="prog" id="ringProg" cx="39" cy="39" r="34" stroke-width="6" stroke-dasharray="213.63" stroke-dashoffset="213.63"/></svg>
+            <div class="lvl"><div><small>Level</small><strong id="heroLvl">1</strong></div></div>
+          </div>
+          <div class="hero-text">
+            <p class="greet" id="greet">Hello, Chris</p>
+            <p class="rank" id="heroRank">Recruit</p>
+            <div class="xpbar" aria-hidden="true"><i id="xpFill" style="width:0%"></i></div>
+            <p class="xpline num" id="xpLine">0 / 150 XP to Level 2</p>
+          </div>
+          <div class="pills">
+            <span class="pill flame"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2c.6 3.4-1.2 5.2-2.7 6.9C7.8 10.6 6.5 12.2 6.5 15a5.5 5.5 0 0 0 11 0c0-2.3-1-4.2-2.2-5.6-.2 1.4-.9 2.5-2 3 .5-3.6-.4-7.6-1.3-10.4Z"/></svg><span id="streakTxt">0-day streak</span></span>
+            <span class="pill xpp"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M13 2 4 14h7l-1 8 9-12h-7Z"/></svg><span id="todayXp" class="num">+0 XP today</span></span>
+          </div>
+        </div>
+
+        <blockquote class="qotd" id="qotd" hidden><p id="qotdText"></p><cite id="qotdBy"></cite></blockquote>
+
+        <button class="btn block" id="newQuestBtn"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg>New quest</button>
+
+        <div class="sec">
+          <div class="sec-head"><h2>Daily habits</h2><span id="habitCount"></span></div>
+          <div id="habitList"></div>
+        </div>
+        <div class="sec">
+          <div class="sec-head"><h2>Quests</h2><span id="questCount"></span></div>
+          <div id="questList"></div>
+        </div>
+        <details class="done-list" id="doneWrap" hidden>
+          <summary id="doneSummary">Completed</summary>
+          <div class="panel list" id="doneList"></div>
+        </details>
+      </div>
+    </section>
+
+    <!-- FUTURE ME -->
+    <section class="view" id="view-future" aria-label="Future Me" hidden>
+      <div class="chat-head">
+        <div class="wrap">
+          <div class="avatar" id="fmAvatar" aria-hidden="true">C</div>
+          <div class="chat-who"><h2 id="fmName">Future Chris</h2><p class="status" id="fmSub">online</p></div>
+          <button class="icon-btn" id="remindBtn" type="button" aria-label="Check-in times and phone reminders"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 8a6 6 0 1 1 12 0c0 7 3 9 3 9H3s3-2 3-9"/><path d="M10.3 21a1.94 1.94 0 0 0 3.4 0"/></svg></button>
+          <button class="btn ghost sm" id="teachBtn">Teach</button>
+        </div>
+      </div>
+      <div class="chat-log" id="chatLog" aria-live="polite"><div class="wrap" id="chatInner"></div></div>
+      <form class="composer" id="chatForm">
+        <div class="wrap">
+          <div class="topics" id="topics" role="toolbar" aria-label="Topics"></div>
+          <div class="inrow">
+            <textarea id="chatInput" rows="1" placeholder="Talk to Future Chris…" aria-label="Message Future Me"></textarea>
+            <button class="send" type="submit" aria-label="Send">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
+            </button>
+          </div>
+        </div>
+      </form>
+    </section>
+
+    <!-- NOTES -->
+    <section class="view" id="view-notes" aria-label="Notes" hidden>
+      <div class="wrap view-inner">
+        <div class="books">
+          <div class="booktabs" role="tablist" aria-label="Notebooks">
+            <button class="book" role="tab" data-act="book" data-b="a" id="bookA"><b id="bookAName">Notes</b><span id="bookACount">0</span></button>
+            <button class="book" role="tab" data-act="book" data-b="b" id="bookB"><b id="bookBName">Journal</b><span id="bookBCount">0</span></button>
+          </div>
+          <button class="icon-btn" id="renameBook" type="button" aria-label="Rename this notebook"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg></button>
+        </div>
+        <form class="panel card" id="noteForm">
+          <div class="seg" role="radiogroup" aria-label="Type">
+            <label><input type="radio" name="nkind" id="nk-note" value="note" checked><span>Note</span></label>
+            <label><input type="radio" name="nkind" id="nk-quote" value="quote"><span>Quote</span></label>
+            <label><input type="radio" name="nkind" id="nk-idea" value="idea"><span>Idea</span></label>
+            <label><input type="radio" name="nkind" id="nk-win" value="win"><span>Win</span></label>
+          </div>
+          <textarea class="field" id="noteText" placeholder="Write a thought, a lesson, a plan…" aria-label="Note text"></textarea>
+          <input class="field" id="noteBy" placeholder="Who said it? (optional)" aria-label="Quote author" hidden>
+          <button class="btn" type="submit">Save</button>
+        </form>
+        <div class="filters" id="noteFilters" role="toolbar" aria-label="Filter notes"></div>
+        <div class="notes" id="noteList"></div>
+      </div>
+    </section>
+
+    <!-- TROPHIES -->
+    <section class="view" id="view-trophies" aria-label="Trophies" hidden>
+      <div class="wrap view-inner">
+        <div class="stats" id="statGrid"></div>
+        <div class="sec">
+          <div class="sec-head"><h2>Last 4 weeks</h2><span id="calNote"></span></div>
+          <div class="panel card"><div class="cal" id="cal"></div></div>
+        </div>
+        <div class="sec">
+          <div class="sec-head"><h2>Badges</h2><span id="badgeCount"></span></div>
+          <div class="badges" id="badgeGrid"></div>
+        </div>
+        <div class="sec">
+          <div class="sec-head"><h2>Road to CEO</h2><span>XP to reach each level</span></div>
+          <div class="panel list" id="ladder"></div>
+        </div>
+        <div class="sec">
+          <div class="sec-head"><h2>Quests by area</h2></div>
+          <div class="panel list" id="catList"></div>
+        </div>
+        <div class="panel card">
+          <h3>Your data lives on this phone</h3>
+          <p class="muted">There's no account, so nothing is stored online. Make a backup now and then and keep it somewhere safe, like an email to yourself. If you change phones or clear your browser, restore it here.</p>
+          <div class="btnrow"><button class="btn ghost" id="backupBtn">Back up</button><button class="btn ghost" id="restoreBtn">Restore</button></div>
+        </div>
+        <button class="btn ghost block" id="helpBtn2">Put this app on your home screen</button>
+      </div>
+    </section>
+  </main>
+
+  <nav class="tabbar" aria-label="Sections">
+    <div class="wrap">
+      <button class="tab" data-tab="quests"><span class="pip"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="5"/><circle cx="12" cy="12" r="1.3" fill="currentColor"/></svg></span>Quests</button>
+      <button class="tab" data-tab="future"><span class="pip" id="futurePip"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 5.5A2.5 2.5 0 0 1 6.5 3h11A2.5 2.5 0 0 1 20 5.5v8a2.5 2.5 0 0 1-2.5 2.5H10l-4.5 4v-4H6.5A2.5 2.5 0 0 1 4 13.5Z"/><path d="M9 9.5h6M9 12.5h3.5"/></svg><span class="count" id="unreadCount" hidden></span></span>Future Me</button>
+      <button class="tab" data-tab="notes"><span class="pip"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 3h9l4 4v14H6Z"/><path d="M15 3v4h4M9 12h7M9 16h5"/></svg></span>Notes</button>
+      <button class="tab" data-tab="trophies"><span class="pip"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M8 4h8v5a4 4 0 0 1-8 0Z"/><path d="M8 6H5v1.5A3 3 0 0 0 8 10.5M16 6h3v1.5a3 3 0 0 1-3 3M12 13v4M9 21h6M10 17h4"/></svg></span>Trophies</button>
+    </div>
+  </nav>
+</div>
+
+<!-- New quest sheet -->
+<div class="scrim" id="sheetQuest" hidden>
+  <form class="sheet" id="questForm" role="dialog" aria-modal="true" aria-labelledby="qfTitle">
+    <div class="grab"></div>
+    <h2 id="qfTitle">New quest</h2>
+    <div class="row"><label class="lbl" for="qTitle">What will you do?</label><input class="field" id="qTitle" maxlength="90" placeholder="e.g. Film a 60-second Reel" autocomplete="off"></div>
+    <div class="row"><span class="lbl">Area</span><div class="seg" id="qCats" role="radiogroup" aria-label="Area"></div></div>
+    <div class="row"><span class="lbl">Difficulty</span>
+      <div class="seg" role="radiogroup" aria-label="Difficulty">
+        <label><input type="radio" name="qdiff" id="qd-easy" value="easy"><span>Easy · 10 XP</span></label>
+        <label><input type="radio" name="qdiff" id="qd-medium" value="medium" checked><span>Medium · 25 XP</span></label>
+        <label><input type="radio" name="qdiff" id="qd-hard" value="hard"><span>Hard · 50 XP</span></label>
+      </div>
+    </div>
+    <div class="row"><span class="lbl">How often</span>
+      <div class="seg" role="radiogroup" aria-label="How often">
+        <label><input type="radio" name="qrep" id="qr-once" value="once" checked><span>One-off quest</span></label>
+        <label><input type="radio" name="qrep" id="qr-daily" value="daily"><span>Daily habit</span></label>
+      </div>
+    </div>
+    <div class="actions"><button type="button" class="btn ghost" data-close>Cancel</button><button type="submit" class="btn">Add quest</button></div>
+  </form>
+</div>
+
+<!-- Teach sheet -->
+<div class="scrim" id="sheetTeach" hidden>
+  <div class="sheet" role="dialog" aria-modal="true" aria-labelledby="tTitle">
+    <div class="grab"></div>
+    <h2 id="tTitle">Teach Future Me</h2>
+    <div class="teach-block">
+      <h3>Try it</h3>
+      <div class="inline"><input class="field" id="tTest" placeholder="Type something you might say…" autocomplete="off" aria-label="Test message"><button class="btn sm" id="tTestBtn" type="button">Test</button></div>
+      <div class="test-out" id="tTestOut" hidden></div>
+    </div>
+
+    <div class="teach-block">
+      <h3>Who Future Me is</h3>
+      <p class="muted">Give Future Me the qualities you're growing into. Future Me already has them and lives them out when you talk: in advice, in check-ins, and when you ask “Who are you?”.</p>
+      <div class="rows" id="qList"></div>
+      <div><button class="btn sm" id="qNew" type="button">+ Add a quality</button></div>
+      <span class="lbl">Quick add</span>
+      <div class="picks" id="qPicks"></div>
+      <div class="vrow"><span class="muted">Your vision for <span id="tYear">2031</span> shows at the top of the chat.</span><button class="btn ghost sm" id="tVision" type="button">Edit my vision</button></div>
+    </div>
+
+    <div class="teach-block">
+      <h3>Accountability</h3>
+      <p class="muted">How hard Future Me holds you to your word. Changes save straight away.</p>
+      <div class="seg" role="radiogroup" aria-label="How strict">
+        <label><input type="radio" name="alevel" id="al-gentle" value="gentle"><span>Gentle</span></label>
+        <label><input type="radio" name="alevel" id="al-firm" value="firm"><span>Firm</span></label>
+        <label><input type="radio" name="alevel" id="al-strict" value="strict"><span>Strict</span></label>
+      </div>
+      <div class="vrow"><span class="muted">Future Me texts you a check-in every morning and evening.</span><button class="btn ghost sm" id="tRemind" type="button">Check-in times</button></div>
+      <label class="switch"><input type="checkbox" id="aPromises"> <span>When I say “I will…”, offer to make it a promise I'm held to</span></label>
+      <label class="switch"><input type="checkbox" id="aStale"> <span>Call out quests I've left for more than 3 days</span></label>
+      <label class="switch"><input type="checkbox" id="aNudge"> <span>Nudge me in replies when I haven't done a quest today</span></label>
+    </div>
+
+    <div class="teach-block">
+      <h3>Voice</h3>
+      <p class="muted">How Future Me sounds when it talks to you.</p>
+      <span class="lbl">Tone</span>
+      <div class="tones" id="cTones" role="radiogroup" aria-label="Tone"></div>
+      <label class="lbl" for="cCalls">What Future Me calls you</label>
+      <input class="field" id="cCalls" maxlength="120" placeholder="e.g. Chris, Boss, Champ" autocomplete="off">
+      <p class="hint">Separate with commas. Future Me picks one each time. Use {you} in your lessons to include it.</p>
+      <label class="lbl" for="tStyle">Personality, in your own words</label>
+      <textarea class="field" id="tStyle" rows="3"></textarea>
+      <p class="hint">Goes to Claude when you tap Copy for Claude.</p>
+      <label class="lbl" for="cCatch">Catchphrases (one per line)</label>
+      <textarea class="field" id="cCatch" rows="3" placeholder="We move.&#10;Small steps, big future.&#10;Never miss twice."></textarea>
+      <div class="seg" role="radiogroup" aria-label="How often to use catchphrases">
+        <label><input type="radio" name="cfreq" id="cf-never" value="never"><span>Never</span></label>
+        <label><input type="radio" name="cfreq" id="cf-some" value="some"><span>Sometimes</span></label>
+        <label><input type="radio" name="cfreq" id="cf-often" value="often"><span>Often</span></label>
+      </div>
+      <label class="lbl" for="cRules">Rules I live by (one per line)</label>
+      <textarea class="field" id="cRules" rows="3" placeholder="Pay myself first.&#10;Protect my sleep after night shifts.&#10;Post even when it isn't perfect."></textarea>
+      <label class="lbl" for="cNever">Future Me never says</label>
+      <input class="field" id="cNever" maxlength="300" placeholder="e.g. hustle, grind" autocomplete="off">
+      <label class="switch"><input type="checkbox" id="cNext"> <span>Remind me of my next quest in replies</span></label>
+      <label class="switch"><input type="checkbox" id="cStreak"> <span>Mention my streak</span></label>
+      <label class="switch"><input type="checkbox" id="cEmoji"> <span>Use emojis</span></label>
+      <label class="lbl" for="tSignoff">Sign-off added to every reply (optional)</label>
+      <input class="field" id="tSignoff" maxlength="160" placeholder="e.g. Let's go, {you}!" autocomplete="off">
+      <div><button class="btn sm" id="tSaveVoice" type="button">Save voice</button></div>
+    </div>
+
+    <div class="lessons-head"><h3>Lessons</h3><button class="btn sm" id="tNew" type="button">+ New lesson</button></div>
+    <p class="muted">A lesson says: when you say these words, reply like this. Your lessons are checked first, and you can rewrite any of mine.</p>
+    <div class="rows" id="tList"></div>
+    <button type="button" class="btn ghost" id="clearChatBtn">Clear chat history</button>
+    <button type="button" class="btn" data-close>Done</button>
+  </div>
+</div>
+
+<!-- Rename notebook sheet -->
+<div class="scrim" id="sheetBook" hidden>
+  <form class="sheet" id="bookForm" role="dialog" aria-modal="true" aria-labelledby="bkTitle">
+    <div class="grab"></div>
+    <h2 id="bkTitle">Rename notebook</h2>
+    <div class="row"><label class="lbl" for="bkName">Name</label><input class="field" id="bkName" maxlength="20" autocomplete="off" placeholder="e.g. Gratitude"></div>
+    <div class="actions"><button type="button" class="btn ghost" data-close>Cancel</button><button type="submit" class="btn">Save</button></div>
+  </form>
+</div>
+
+<!-- Check-in times sheet -->
+<div class="scrim" id="sheetRemind" hidden>
+  <div class="sheet" role="dialog" aria-modal="true" aria-labelledby="rmTitle">
+    <div class="grab"></div>
+    <h2 id="rmTitle">Check-ins</h2>
+    <p class="muted">Future Me texts you at these times, like a friend would. The messages are waiting for you, with a badge, the next time you open the app.</p>
+    <div class="teach-block">
+      <div class="timerow"><label class="switch"><input type="checkbox" id="rMorningOn"> <span>Morning check-in</span></label><input class="field time" type="time" id="rMorning" aria-label="Morning check-in time"></div>
+      <div class="timerow"><label class="switch"><input type="checkbox" id="rEveningOn"> <span>Evening catch-up</span></label><input class="field time" type="time" id="rEvening" aria-label="Evening catch-up time"></div>
+    </div>
+    <div class="teach-block">
+      <h3>Get a buzz on your phone</h3>
+      <p class="muted">A web app can't send notifications by itself while it's closed. The way round it: put your check-ins in your phone's calendar. Your phone then buzzes at those times, and the reminder links straight back here.</p>
+      <a class="btn block" id="gcalMorning" href="#" target="_blank" rel="noopener">Add morning check-in to Google Calendar</a>
+      <a class="btn ghost block" id="gcalEvening" href="#" target="_blank" rel="noopener">Add evening catch-up to Google Calendar</a>
+      <p class="hint">Google Calendar opens with a daily event ready. Tap Save. Then open the event and set its notification to “At time of event” so it buzzes right on time.</p>
+    </div>
+    <div class="teach-block">
+      <h3>Or use your phone's own reminders</h3>
+      <p class="muted"><strong>iPhone:</strong> open Reminders, add “Check in with Future Me”, tap ⓘ, turn on Date and Time, set Repeat to Daily, and paste the app link into URL.</p>
+      <p class="muted"><strong>Android:</strong> open Clock, add an alarm at your check-in time, and set the label to “Check in with Future Me”.</p>
+      <p class="hint linkline" id="appLink"></p>
+      <div><button class="btn ghost sm" id="copyLink" type="button">Copy app link</button></div>
+    </div>
+    <button type="button" class="btn" data-close>Done</button>
+  </div>
+</div>
+
+<!-- Quality sheet -->
+<div class="scrim" id="sheetQuality" hidden>
+  <form class="sheet" id="qualityForm" role="dialog" aria-modal="true" aria-labelledby="qlTitle">
+    <div class="grab"></div>
+    <h2 id="qlTitle">New quality</h2>
+    <div class="row"><label class="lbl" for="qlName">Quality</label><input class="field" id="qlName" maxlength="40" placeholder="e.g. Disciplined" autocomplete="off"></div>
+    <div class="row"><label class="lbl" for="qlHow">How Future Me shows it</label><textarea class="field" id="qlHow" rows="4" placeholder="Write it as Future Me, starting with “I”. e.g. I do what I said I'd do, even when I don't feel like it."></textarea></div>
+    <div class="row"><label class="lbl" for="qlWords">Words that bring it up (optional)</label><input class="field" id="qlWords" placeholder="e.g. lazy, motivation, procrastinate" autocomplete="off"><p class="hint">When you say these, Future Me answers as this quality.</p></div>
+    <div class="row"><label class="lbl" for="qlAction">A small action that builds it (optional)</label><input class="field" id="qlAction" maxlength="90" placeholder="e.g. Do my hardest quest first" autocomplete="off"><p class="hint">Future Me offers it as a quest when you talk about this quality.</p></div>
+    <div class="row"><span class="lbl">Area for that quest</span><div class="seg" id="qlCats" role="radiogroup" aria-label="Area"></div></div>
+    <div class="actions"><button type="button" class="btn ghost" id="qlDel">Delete</button><button type="submit" class="btn">Save quality</button></div>
+    <button type="button" class="btn ghost" data-close>Cancel</button>
+  </form>
+</div>
+
+<!-- Lesson sheet -->
+<div class="scrim" id="sheetLesson" hidden>
+  <form class="sheet" id="lessonForm" role="dialog" aria-modal="true" aria-labelledby="lfTitle">
+    <div class="grab"></div>
+    <h2 id="lfTitle">New lesson</h2>
+    <div class="row"><label class="lbl" for="lName">Lesson name</label><input class="field" id="lName" maxlength="60" placeholder="e.g. Gym motivation" autocomplete="off"></div>
+    <div class="row" id="lWordsRow"><label class="lbl" for="lWords">When I say any of these</label><input class="field" id="lWords" placeholder="gym, workout, training" autocomplete="off"><p class="hint">Words or short phrases, separated by commas. Endings like -s, -ed and -ing match too.</p></div>
+    <div class="row"><label class="lbl" for="lReplies">Future Me replies</label><textarea class="field" id="lReplies" rows="8" placeholder="Write a reply here.&#10;&#10;Leave a blank line, then write another. I'll pick one at random each time."></textarea><p class="hint">Fill-ins: {you} (what I call you) {name} {next} (your next quest) {streak} {level} {rank} {quote}. Put **double stars** around words to make them bold.</p></div>
+    <div class="row" id="lChipRow"><label class="lbl" for="lChip">Quick button (optional)</label><input class="field" id="lChip" maxlength="40" placeholder="e.g. Gym" autocomplete="off"><p class="hint">Adds a button above the chat box that runs this lesson.</p></div>
+    <label class="switch" id="lOnRow"><input type="checkbox" id="lOn" checked> <span>Lesson is on</span></label>
+    <div class="actions"><button type="button" class="btn ghost" id="lDel">Delete</button><button type="submit" class="btn">Save lesson</button></div>
+    <button type="button" class="btn ghost" data-close>Cancel</button>
+  </form>
+</div>
+
+<!-- Vision sheet -->
+<div class="scrim" id="sheetVision" hidden>
+  <form class="sheet" id="visionForm" role="dialog" aria-modal="true" aria-labelledby="vfTitle">
+    <div class="grab"></div>
+    <h2 id="vfTitle">Your vision</h2>
+    <p class="muted">This shows at the top of every chat. Read it often. It's the person you're building.</p>
+    <div class="row"><label class="lbl" for="vName">Your first name</label><input class="field" id="vName" maxlength="40"></div>
+    <div class="row"><label class="lbl" for="vYear">Future Me is from the year</label><input class="field num" id="vYear" type="number" min="2027" max="2060" inputmode="numeric"></div>
+    <div class="row"><label class="lbl" for="vVision">The person I'm becoming</label><textarea class="field" id="vVision" rows="6"></textarea></div>
+    <div class="row"><label class="lbl" for="vNow">Where I am now</label><textarea class="field" id="vNow" rows="5"></textarea></div>
+    <div class="actions"><button type="button" class="btn ghost" data-close>Cancel</button><button type="submit" class="btn">Save</button></div>
+  </form>
+</div>
+
+<!-- Copy sheet (backup and Copy for Claude) -->
+<div class="scrim" id="sheetCopy" hidden>
+  <div class="sheet" role="dialog" aria-modal="true" aria-labelledby="cpTitle">
+    <div class="grab"></div>
+    <h2 id="cpTitle">Back up</h2>
+    <p class="muted" id="cpIntro"></p>
+    <textarea class="field mono" id="cpText" readonly aria-label="Text to copy"></textarea>
+    <div class="actions"><button type="button" class="btn ghost" data-close>Close</button><button type="button" class="btn" id="cpCopy">Copy</button></div>
+  </div>
+</div>
+
+<!-- Restore sheet -->
+<div class="scrim" id="sheetRestore" hidden>
+  <div class="sheet" role="dialog" aria-modal="true" aria-labelledby="rsTitle">
+    <div class="grab"></div>
+    <h2 id="rsTitle">Restore a backup</h2>
+    <p class="muted">Paste a backup you copied from this app. It replaces everything currently in the app.</p>
+    <textarea class="field mono" id="rsText" placeholder="Paste your backup here" aria-label="Backup text"></textarea>
+    <div class="actions"><button type="button" class="btn ghost" data-close>Cancel</button><button type="button" class="btn" id="rsGo">Restore</button></div>
+  </div>
+</div>
+
+<!-- Help sheet -->
+<div class="scrim" id="sheetHelp" hidden>
+  <div class="sheet" role="dialog" aria-modal="true" aria-labelledby="hfTitle">
+    <div class="grab"></div>
+    <h2 id="hfTitle">Put Future Chris on your home screen</h2>
+    <div class="help-block">
+      <h3>iPhone</h3>
+      <ol class="steps"><li>Open this app's link in <strong>Safari</strong>.</li><li>Tap the <strong>Share</strong> button (the square with an arrow).</li><li>Tap <strong>Add to Home Screen</strong>, then <strong>Add</strong>.</li></ol>
+    </div>
+    <div class="help-block">
+      <h3>Android</h3>
+      <ol class="steps"><li>Open this app's link in <strong>Chrome</strong>.</li><li>Tap <strong>⋮</strong> in the top corner.</li><li>Tap <strong>Add to Home screen</strong>, then <strong>Add</strong>.</li></ol>
+    </div>
+    <p class="muted">Your quests, notes and chats save on this phone only. Don't use a private browsing tab, and back up from Trophies now and then.</p>
+    <button type="button" class="btn" data-close>Got it</button>
+  </div>
+</div>
+
+<!-- Level up -->
+<div class="scrim center" id="levelUp" hidden>
+  <div class="lu-card" role="dialog" aria-modal="true" aria-labelledby="luRank">
+    <div class="lu-rays" aria-hidden="true"></div>
+    <p class="eyebrow">Level up</p>
+    <div class="lu-num" id="luNum">2</div>
+    <p class="lu-rank" id="luRank">Starter</p>
+    <p class="lu-next" id="luNext"></p>
+    <button class="btn block" data-close>Keep going</button>
+  </div>
+</div>
+
+<div class="toast" id="toast" hidden></div>
+
+<script>
+(() => {
+"use strict";
+/* ---------- helpers ---------- */
+const $ = (s, el = document) => el.querySelector(s);
+const $$ = (s, el = document) => Array.from(el.querySelectorAll(s));
+const esc = s => String(s ?? "").replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+const pad = n => String(n).padStart(2, "0");
+const dayKey = (d = new Date()) => { d = new Date(d); return d.getFullYear() + "-" + pad(d.getMonth() + 1) + "-" + pad(d.getDate()); };
+const parseDay = k => { const [y, m, d] = k.split("-").map(Number); return new Date(y, m - 1, d); };
+const addDays = (d, n) => { const x = new Date(d); x.setDate(x.getDate() + n); return x; };
+const fmt = n => Number(n).toLocaleString("en-GB");
+const uid = () => Date.now().toString(36) + Math.random().toString(36).slice(2, 7);
+const rand = a => a[Math.floor(Math.random() * a.length)];
+const clone = o => JSON.parse(JSON.stringify(o));
+const lowerFirst = s => /^[A-Z][a-z]/.test(s) ? s.charAt(0).toLowerCase() + s.slice(1) : s;
+const endStop = s => { const t = String(s || "").trim(); return !t ? "" : /[.!?]$/.test(t) ? t : t + "."; };
+const firstSentence = s => { const m = String(s || "").match(/^.*?[.!?](?=\s|$)/); return (m ? m[0] : String(s || "")).trim(); };
+const BR = "\n\u2063\n"; /* splits one reply into separate text bubbles */
+const APP_URL = /^https?:$/.test(location.protocol) && !/claudeusercontent|claude\.ai/.test(location.hostname) ? location.origin + location.pathname.replace(/index\.html$/, "") : "https://claude.ai/artifact/RjUUxyS552jUKGnN9ZSgbk";
+
+/* ---------- game rules ---------- */
+const DIFF = { easy: { xp: 10, label: "Easy" }, medium: { xp: 25, label: "Medium" }, hard: { xp: 50, label: "Hard" } };
+const CATS = { money: "Money", learn: "Learn", create: "Create", business: "Business", health: "Health", life: "Life" };
+const RANKS = ["Recruit", "Starter", "Builder", "Hustler", "Operator", "Founder", "Director", "CEO", "Mogul", "Legend"];
+const STEP = 150;
+const levelStart = n => STEP * n * (n - 1) / 2;
+function levelInfo(xp) {
+  let n = 1;
+  while (xp >= levelStart(n + 1)) n++;
+  const start = levelStart(n), next = levelStart(n + 1);
+  return { n, rank: RANKS[Math.min(n, 10) - 1], start, next, into: xp - start, span: next - start, pct: (xp - start) / (next - start) };
+}
+const DEFAULT_PROFILE = {
+  name: "Chris",
+  year: 2031,
+  vision: "It's 2031. I'm the CEO of my own physical business, with a team I trust, built on what I learned in banking and in care. My online income from YouTube, Instagram, Substack and digital products keeps coming in even while I sleep. I can code and build websites and apps myself, and I use AI tools to work smarter. I have savings, investments and no bad debt, and I have time for the people I love and for my health.",
+  now: "I rose to manager in banking before relocating to the UK, and I've worked across care and the NHS. Right now I work shifts while I build towards my own business and online income."
+};
+
+/* ---------- Future Me: qualities ---------- */
+const QUALITY_LIBRARY = [
+  { name: "Disciplined", how: "I do what I said I'd do, even when I don't feel like it. I never miss twice.", words: "lazy, motivation, motivated, can't be bothered, procrastinate, procrastinating, discipline, consistent, consistency", action: "Do my hardest quest first today", cat: "life" },
+  { name: "Confident", how: "I walk into rooms like I belong there, because I've done the work. I speak up and I back myself.", words: "confidence, nervous, scared, afraid, shy, imposter, self-doubt", action: "Post one thing online without overthinking it", cat: "create" },
+  { name: "Smart with money", how: "Every pound has a job. I pay myself first, I invest every month, and I never buy things to impress anyone.", words: "money mindset, wealth, wealthy, rich, financial freedom, broke", action: "Plan this week's spending before I spend anything", cat: "money" },
+  { name: "A leader", how: "People follow me because I go first, I stay calm, and I take responsibility when things go wrong.", words: "lead, leadership, team, staff, colleague, manager, managing people", action: "Help one colleague today without being asked", cat: "business" },
+  { name: "Calm under pressure", how: "When things kick off, I slow down. I breathe, I think, then I act. Chaos doesn't run me.", words: "angry, anger, panic, pressure, kicked off, incident, calm down, wound up", action: "Do 5 minutes of slow breathing after my shift", cat: "health" },
+  { name: "Creative", how: "I make something every week. Ideas come to me because I write every one of them down.", words: "creative, creativity, inspiration, writer's block, no ideas", action: "Write 5 content ideas in Notes", cat: "create" },
+  { name: "Healthy and strong", how: "I train, I sleep properly and I eat like my body is my business, because it is.", words: "gym, workout, exercise, fitness, weight, diet, healthy", action: "Walk or train for 20 minutes", cat: "health" },
+  { name: "Tech-savvy", how: "I can build websites and apps, and I use AI tools every day to work smarter, not harder.", words: "learn to code, ai, computer, tech skills, software", action: "Spend 30 minutes on a coding lesson", cat: "learn" },
+  { name: "Focused", how: "I protect my time. My phone doesn't run my day. I do what matters first.", words: "distracted, distraction, scrolling, wasting time, social media addiction", action: "Work for 25 minutes with my phone in another room", cat: "life" },
+  { name: "Patient", how: "I know big things take years. I don't rush, and I don't quit.", words: "patience, impatient, taking too long, how long will it take, not working yet", action: "Write down one thing that's improved this month", cat: "life" },
+  { name: "Resilient", how: "I've been knocked down plenty of times. I get back up faster every time.", words: "setback, rejected, rejection, knocked down, failed, bounce back", action: "Write down one lesson from a recent setback", cat: "life" },
+  { name: "Generous", how: "I give back. I mentor people starting where I started, and I look after my family without stress.", words: "give back, help people, charity, mentor, family", action: "Do one kind thing for someone today", cat: "life" },
+  { name: "Grateful", how: "I notice what's going right. Gratitude keeps me hungry and humble at the same time.", words: "grateful, gratitude, thankful, ungrateful", action: "Write 3 things I'm grateful for", cat: "life" },
+  { name: "Organised", how: "I plan my week every Sunday, so my days don't run me.", words: "organised, organized, disorganised, messy, plan my week, schedule", action: "Plan next week's quests on Sunday", cat: "life" },
+  { name: "True to my word", how: "When I say I'll do something, it gets done. My word is my reputation.", words: "keep my word, reliable, reputation, trustworthy", action: "Keep one promise I make today", cat: "life" }
+];
+const DEFAULT_QUALITY_NAMES = ["Disciplined", "Confident", "Smart with money", "A leader"];
+const makeQuality = lib => ({ id: "q-" + uid(), name: lib.name, how: lib.how || "", words: lib.words || "", action: lib.action || "", cat: lib.cat || "life" });
+const QUALITY_LINES = [
+  "Being {q} is who I am now. {how}",
+  "That's the part of me that's {q} talking. {how}",
+  "You're becoming {q}, {you}. I know, because I am. {how}",
+  "This is what being {q} looks like in {year}: {how}"
+];
+const QUALITY_REPLIES = [
+  "Being {q} is who I am now, {you}. {how}",
+  "Honestly? {how} That's what being {q} means to me.",
+  "That's me now: {q}. {how}"
+];
+
+/* ---------- Future Me: lessons (checked top to bottom) ---------- */
+const QUEST_BANK = [
+  ["Write 10 video ideas in Notes", "create", "easy"],
+  ["Film a 60-second Reel about one career lesson", "create", "medium"],
+  ["Set up my YouTube channel name and banner", "create", "medium"],
+  ["Write my first Substack post", "create", "hard"],
+  ["Finish one free HTML lesson on freeCodeCamp", "learn", "easy"],
+  ["Watch a beginner JavaScript video and take notes", "learn", "medium"],
+  ["Build a one-page website about me", "learn", "hard"],
+  ["Try one new AI tool and note what it's good for", "learn", "easy"],
+  ["List every subscription I pay for", "money", "easy"],
+  ["Set up an automatic transfer to savings on payday", "money", "medium"],
+  ["Work out my 3-month emergency fund target", "money", "medium"],
+  ["Write 3 business ideas that use my care experience", "business", "easy"],
+  ["Read the CQC guidance on registering a care service", "business", "medium"],
+  ["Talk to one person who runs their own business", "business", "medium"],
+  ["Sleep 7 hours after my next shift", "health", "medium"],
+  ["Drink 2 litres of water today", "health", "easy"]
+];
+const DEFAULT_RULES = [
+  { id: "whoami", name: "Who are you?", chip: "Who are you?", action: "whoami",
+    words: "who are you, tell me about yourself, tell me about you, what are you like, describe yourself, your qualities, what kind of person",
+    replies: ["I'm you, {you}, in {year} 😄 This is who I've become:", "Here's who you're becoming, {you}. I know, because I'm already there:"] },
+  { id: "review", name: "Review my day", chip: "Review my day", action: "review",
+    words: "review my day, how did i do, how am i doing, check on me, hold me accountable, accountability, my progress",
+    replies: ["Okay, honest review time, {you}.", "Let's look at your day properly, {you}."] },
+  { id: "howareyou", name: "How are you?", chip: "", action: "askmood",
+    words: "how are you, how r u, how are u, how you doing, how's it going, hows it going, you good, you alright, wyd, what are you doing, what you up to",
+    replies: ["I'm good! Life in {year} is a lot of early mornings, honestly 😅" + BR + "But forget me. How are YOU doing?", "Can't complain, busy building as always." + BR + "More importantly, how are you feeling?"] },
+  { id: "feelingbad", name: "Feeling low", chip: "",
+    words: "sad, feeling down, feel down, feeling low, upset, lonely, depressed, anxious, anxiety, not great, rough day, bad day, crap day, struggling, miserable, fed up, not okay, not ok",
+    replies: ["Ah {you}, I'm sorry 💙 That's a heavy feeling.", "Hey. I've got you. A bad day doesn't cancel out the progress you've made.", "I remember days like this. They pass, even when it doesn't feel like it."] },
+  { id: "feelinggood", name: "Feeling good", chip: "",
+    words: "i'm good, im good, i'm great, im great, feeling good, feel good, buzzing, i'm happy, im happy, great day, good day, i'm fine, im fine, doing well",
+    replies: ["Love to hear it 😄 What's got you in a good mood?", "Yesss. Use that energy while you've got it. What's the main thing today?", "That's what I like to hear 🔥"] },
+  { id: "thanks", name: "Thank you", chip: "",
+    words: "thanks, thank you, cheers, appreciate it, ty, thx",
+    replies: ["Anytime, {you}. That's what I'm here for 👊", "Always. We're in this together.", "Don't mention it 😄"] },
+  { id: "laugh", name: "Laughing", chip: "",
+    words: "lol, haha, hahaha, lmao, 😂, 🤣",
+    replies: ["😂😂", "Haha you're mad 😂", "😂 Okay but seriously, what's next?"] },
+  { id: "goodnight", name: "Good night", chip: "",
+    words: "good night, goodnight, night night, going to bed, off to bed, gn, nighty night",
+    replies: ["Night {you} 🌙 Proud of you today. Sleep properly.", "Sleep well. Tomorrow we go again 💪", "Night night. Phone down, eyes closed 😴"] },
+  { id: "love", name: "Love you", chip: "",
+    words: "love you, i love you, ily",
+    replies: ["Love you too, {you} 😄 Seriously, I'm proud of who you're becoming."] },
+  { id: "giveup", name: "Feeling like giving up", chip: "I feel like giving up",
+    words: "give up, giving up, quit, can't do, pointless, failing, failure, behind, stuck, overwhelm, stress, hopeless, useless, not good enough, doubt",
+    replies: [
+      "Listen. I've been exactly where you are, and I didn't quit. That's the only reason I'm talking to you from {year}.",
+      "Feeling behind is normal. You rose to manager in banking, then started again in a new country, and you kept going. That person doesn't give up because of a slow week.",
+      "Remember why you started. {quote}"
+    ] },
+  { id: "tired", name: "Tired after a shift", chip: "I'm tired after my shift",
+    words: "tired, exhausted, knackered, drained, sleep, sleepy, night shift, long shift, long day, worn out, burnout, burn out",
+    replies: [
+      "I remember those shifts. Staying alert all day takes it out of you. Rest is part of the plan, not a break from it.",
+      "You don't have to be a machine. On the days after nights, I did the 10-minute version of everything, and it still kept my streak alive.",
+      "Being tired means you showed up. Future me was built on rested days too."
+    ] },
+  { id: "quests", name: "Suggest quests", chip: "Suggest quests", action: "quests",
+    words: "quest, suggest, give me tasks, what tasks",
+    replies: ["Here are three I'd take on next. Tap the ones you want 👇", "This is what moved the needle for me. Tap to add any of these."] },
+  { id: "money", name: "Money", chip: "Money",
+    words: "money, save, saving, savings, debt, budget, invest, investment, investing, salary, income, isa, pension, spend, bills",
+    replies: [
+      "Money lesson from the future: pay yourself first. On payday, move a fixed amount into savings before you spend anything. Start small, even £25, and make it automatic. You know this from banking. Now live it.",
+      "Know your numbers. Log what you spend every day for 30 days. Every pound you stop leaking is a pound that can build the business.",
+      "Keep side-hustle money separate from everyday money. When side income gets close to £1,000 in a tax year, check the HMRC rules on gov.uk about registering as self-employed.",
+      "Build an emergency fund first: three months of essential costs. Then look at tax-free options like an ISA. MoneyHelper has free, impartial guidance on all of it."
+    ] },
+  { id: "content", name: "Content", chip: "Content",
+    words: "youtube, video, instagram, reel, substack, content, post, film, filming, newsletter, audience, follower, tiktok, channel",
+    replies: [
+      "Your story is your content. Bank manager, a move to the UK, care work, the NHS. Hardly anyone has that mix. Just check your employer's social media rules before you talk about your day job.",
+      "Don't wait for perfect gear. Your phone, light from a window and a strong first line are enough. Done is better than perfect.",
+      "Turn one idea into three: a YouTube video, cut into Reels, and written up as a Substack post. That's how I showed up everywhere without burning out."
+    ] },
+  { id: "code", name: "Coding", chip: "Coding",
+    words: "code, coding, html, css, javascript, website, programming, program, developer, it skills, tech, ai tool",
+    replies: [
+      "Start with HTML and CSS, the building blocks of every website. freeCodeCamp and The Odin Project are free, and 30 minutes a day is plenty.",
+      "Learn by building. This app is made from HTML, CSS and JavaScript. One day you'll build one like it yourself.",
+      "When you get stuck, ask Claude to explain the error line by line. Understanding it is what makes you hireable."
+    ] },
+  { id: "business", name: "Business", chip: "Business",
+    words: "business, ceo, company, care home, agency, side hustle, client, customer, startup, start up, sell, product, cqc",
+    replies: [
+      "Build on what you already know. Banking taught you money, risk and customers. Care and the NHS taught you safeguarding and de-escalation. That mix points to care services, training, or money education.",
+      "Start small and prove it. Before you register a company or sign anything, find out whether people will pay.",
+      "Check your employer's rules on outside work and business interests, and declare what you need to. Doing it properly protects your job while you build."
+    ] },
+  { id: "win", name: "Telling me about a win", chip: "", action: "win",
+    words: "win, won, did it, finished, completed, proud, achieved, smashed, nailed it",
+    replies: ["Yesss! 🔥 Want me to save that to your Wins so you can read it back on hard days?"] },
+  { id: "askwin", name: "The 'I had a win' button", chip: "I had a win", action: "askwin", words: "",
+    replies: ["Ooh go on then 😄 Tell me what happened and I'll save it to your Wins."] },
+  { id: "winsaved", name: "After I save your win", chip: "", action: "system", words: "",
+    replies: ["That's what I'm talking about! 🔥 Saved to your Wins.", "Proud of you, honestly. Saved to your Wins so you can read it back on the hard days."] },
+  { id: "today", name: "What to do today", chip: "What should I do today?",
+    words: "today, focus, what should i do, what do i do, plan, priority, prioritise, next step, where do i start",
+    replies: ["Keep it simple. Today, just do this: **{next}**.", "Here's the move for today: **{next}**. One thing, done properly.", "If you've only got 20 minutes, spend them on **{next}**. That's enough."] },
+  { id: "hello", name: "Saying hello", chip: "", action: "askmood",
+    words: "hi, hello, hey, hiya, yo, morning, good morning, good afternoon, good evening, evening, sup, what's up, whats up, wagwan",
+    replies: ["Heyyy {you} 👋" + BR + "How are you doing today?", "There you are 😄" + BR + "How are you feeling?", "Yo {you}!" + BR + "How's today treating you?"] },
+  { id: "fallback", name: "When nothing else matches", chip: "", action: "system", words: "",
+    replies: [
+      "Hmm, tell me a bit more?",
+      "I hear you." + BR + "Honestly I don't have a proper answer for that one yet. Teach me in Teach, or tap 'Copy for Claude' for a full answer.",
+      "Got you. While we're here though, your next step is **{next}** 😄"
+    ] }
+];
+const CHIP_ORDER = ["today", "review", "whoami", "tired", "giveup", "quests", "money", "content", "code", "business", "askwin"];
+const RULE_CAT = { money: "money", content: "create", code: "learn", business: "business", tired: "health" };
+
+/* Friend-style follow-ups: Future Me asks a question back, then answers your "yes" or "no". */
+const YESNO = [{ label: "Yeah 👍", value: "yes" }, { label: "Not really", value: "no" }];
+const MOOD_QUICK = [{ label: "😞 1", value: "mood:1" }, { label: "😕 2", value: "mood:2" }, { label: "😐 3", value: "mood:3" }, { label: "🙂 4", value: "mood:4" }, { label: "😄 5", value: "mood:5" }];
+const FOLLOW = {
+  tired: { ask: ["Did you at least eat something proper today?", "Honest answer: did you eat today?"],
+    yes: ["Good 👍 Now water, shower, bed. The quests can wait till tomorrow.", "Good. Now get proper sleep. I mean it 😴"],
+    no: ["{you}… eat something first. Even toast. Then sleep. I'm serious 😂", "Nope. Food first, then bed. You can't build an empire on an empty stomach."] },
+  giveup: { ask: ["Want me to pick ONE tiny thing for you to do right now?"],
+    yes: ["Okay. Just this: **{next}**. Nothing else. Message me when it's done."],
+    no: ["That's fine. Rest tonight and we go again tomorrow. I'm not going anywhere 💙"] },
+  money: { ask: ["Quick one: have you checked your bank balance this week?"],
+    yes: ["Good. Knowing your numbers is half the battle 💪"],
+    no: ["Do it now, it takes 30 seconds. Avoiding it is what keeps people stuck. I know, I used to do it 😅"] },
+  content: { ask: ["Have you posted anything this week?"],
+    yes: ["Let's go! 🔥 Keep it going. What's the next one?"],
+    no: ["Then let's fix that. Even a 30-second Reel counts. Want it as a quest?"], noOffer: { title: "Post one short video this week", cat: "create", diff: "medium" } },
+  code: { ask: ["Did you do any coding today?"],
+    yes: ["Love that. 30 minutes a day turns into a whole new career."],
+    no: ["Still time! Even 15 minutes. Do one lesson now, I'll wait 😄"] },
+  business: { ask: ["Have you told anyone about your business idea yet?"],
+    yes: ["Good. What did they say? Feedback is gold."],
+    no: ["Tell one person this week. Saying it out loud makes it real."] },
+  today: { ask: ["Is that doable today?"],
+    yes: ["Then go. Message me when it's done 💪"],
+    no: ["Okay, make it smaller. What's the 10-minute version? Do that."] },
+  feelingbad: { ask: ["Do you want to talk about it?"],
+    yes: ["I'm listening. Tell me what's going on."], yesCtx: "vent",
+    no: ["That's okay. Then do something kind for yourself tonight: a walk, proper food, an early night. Small wins count 💙"] },
+  evening: { yes: ["Proud of you 💪 Rest well. We go again tomorrow.", "That's what I like to hear. Get some proper sleep tonight."],
+    no: ["Okay. No beating yourself up. What got in the way?"], noCtx: "reason" },
+  deal: { yes: ["Deal 🤝 I'll check on you in the morning."],
+    no: ["Okay, then make it smaller. Even 10 minutes counts. I'm not letting you off that easy 😄"] },
+  vent: { reply: ["Thank you for telling me. That sounds hard, and it makes sense you feel that way." + BR + "You don't have to fix it all tonight. What's one small thing that would make tomorrow a bit easier?"], next: "soft" },
+  soft: { reply: ["That's a good start. Proud of you for talking about it 💙 I'm always here."] },
+  reason: { reply: ["Fair enough, that happens." + BR + "Tomorrow, let's do it first thing, before anything else gets in the way. Deal?"], next: "deal", quick: YESNO }
+};
+const MOOD_LINES = {
+  1: ["Ah {you}, I'm sorry 💙 Rough days happen, even to me. Be gentle with yourself today.", "That's a hard one. Thank you for being honest with me 💙"],
+  2: ["Not your best day then. That's okay, it happens.", "Hmm, a bit low. I get it. Let's go easy today."],
+  3: ["Middle of the road. That's fine. One good quest can tip it the right way.", "Okay, a normal day. Normal days are where the real progress happens."],
+  4: ["Love that 😄 Use that energy.", "Good! Let's make the most of it."],
+  5: ["Yesss {you}! 🔥 Days like this are when the big moves happen.", "Look at you 😄 Let's use that and do the hardest thing first."]
+};
+const YES_RE = /^(y|ya|yh|ye|yes|yeah|yea|yep|yup|sure|of course|definitely|i did|did it|done|deal|ok|okay|alright|go on|please|absolutely|for sure)\b/i;
+const NO_RE = /^(n|no|nah|nope|not really|not yet|i haven'?t|i havent|i didn'?t|i didnt|not today|never|not at all)\b/i;
+
+/* ---------- Future Me: voice ---------- */
+const TONES = {
+  friend: { label: "Best friend", desc: "Casual, funny, always in your corner",
+    open: ["Ayy {you} 😄", "{you}!", "Okay {you}, listen.", "Yo {you}.", "Right then, {you}."],
+    close: ["I've got you.", "Proud of you, honestly.", "We go again 💪", "You know I'm always here.", "Talk soon 👊"],
+    emoji: ["😄", "💪", "🔥", "👊", "🙌"] },
+  mentor: { label: "Calm mentor", desc: "Patient, wise, steady",
+    open: ["Breathe, {you}.", "Let's think about this calmly, {you}.", "Here's what I know now, {you}.", "Hear me out, {you}."],
+    close: ["One step at a time.", "You're further along than you think.", "Slow is smooth, and smooth is fast.", "Trust the process you're building."],
+    emoji: ["\u{1F331}", "\u{1F9ED}", "\u2705"] },
+  coach: { label: "Tough-love coach", desc: "Direct, demanding, no excuses",
+    open: ["Listen to me, {you}.", "No excuses, {you}.", "Real talk, {you}.", "Eyes up, {you}."],
+    close: ["Now go and do it.", "Stop waiting. Start.", "Discipline beats motivation.", "Nobody's coming to do it for you."],
+    emoji: ["\u{1F4AA}", "\u{1F525}", "\u23F1\uFE0F"] },
+  hype: { label: "Hype friend", desc: "Loud, excited, your biggest fan",
+    open: ["{you}!! Let's go!", "Ayy {you}, I see you!", "Big moves, {you}!", "Yes {you}!"],
+    close: ["You've got this!", "The future is bright, trust me!", "Let's gooo!", "I'm so proud of where you're heading!"],
+    emoji: ["\u{1F680}", "\u{1F525}", "\u{1F64C}"] },
+  elder: { label: "Wise elder", desc: "Slow, deep, proverb-style",
+    open: ["My dear {you},", "Listen well, {you}.", "{you}, hear me.", "Sit with me a moment, {you}."],
+    close: ["Patience builds empires.", "The tree that grows slowly grows strong.", "What you do daily matters more than what you do once.", "A river cuts rock by staying with it."],
+    emoji: ["\u{1F333}", "\u{1F56F}\uFE0F", "\u{1F4DC}"] },
+  plain: { label: "Just my lessons", desc: "No extra lines added", open: [], close: [], emoji: ["\u2705"] }
+};
+const DEFAULT_STYLE = "Like my best friend who happens to be the future me: casual, warm, funny, honest. Short messages like texts, and always asks me something back.";
+const DEFAULT_CHAR = { tone: "friend", calls: "", catchphrases: [], catchFreq: "some", rules: [], never: "", remindNext: false, streak: true, emoji: true };
+
+/* ---------- Future Me: accountability ---------- */
+const DEFAULT_ACCOUNT = { level: "firm", checkin: true, checkinTime: "08:00", evening: true, eveningTime: "20:30", promises: true, stale: true, nudge: true };
+const ACC = {
+  gentle: {
+    missedYesterday: "Yesterday was quiet. That's okay. Today is a fresh page.",
+    zeroToday: "Nothing ticked off yet today. There's still time, and one small quest is enough.",
+    promiseOpen: "You promised: **{p}**. No pressure, but I'm still here for it.",
+    stale: "**{t}** has been waiting {d} days. Want to make it smaller, or let it go?",
+    promiseAsk: "That sounds like a promise, {you}. Want me to hold you to it?",
+    promiseMade: "Done. **{p}** is on your quest list. I'll check in on it gently.",
+    nudge: "When you're ready, start with **{next}**."
+  },
+  firm: {
+    missedYesterday: "You didn't tick anything off yesterday. One rule: never miss twice. Do one thing today.",
+    zeroToday: "Nothing ticked off yet today. Let's change that now.",
+    promiseOpen: "You promised: **{p}**. I haven't seen it done yet 👀",
+    stale: "**{t}** has been on your list for {d} days. Do it, shrink it, or delete it.",
+    promiseAsk: "Is that a promise, {you}? Tap below and I'll hold you to it.",
+    promiseMade: "Then it's a promise 🤝 **{p}** is on your quest list, and I'll ask you about it.",
+    nudge: "Also, you haven't ticked anything off today yet. Start with **{next}**."
+  },
+  strict: {
+    missedYesterday: "Zero quests yesterday. The person I became doesn't do zero days. Fix it today.",
+    zeroToday: "Zero so far today. That's not who we are. Get one done before you sleep.",
+    promiseOpen: "You gave me your word: **{p}**. Words are cheap. Where's the proof?",
+    stale: "**{t}** has been sitting there for {d} days. Excuses don't build empires. Today, it's done or deleted.",
+    promiseAsk: "Say it like you mean it. Tap below and it becomes a promise. I will check.",
+    promiseMade: "Locked in: **{p}**. I don't forget promises, {you}.",
+    nudge: "Still nothing ticked off today. Put the phone down and go do **{next}**."
+  }
+};
+const PROMISE_RE = /^\s*(?:(?:ok|okay|right|fine|yes|yeah)[,!.]?\s+)?(?:(?:today|tomorrow|tonight|this week)[,]?\s+)?(?:i\s+will|i'll|i\s+am\s+going\s+to|i'm\s+going\s+to|im\s+going\s+to|i'm\s+gonna|im\s+gonna|i\s+promise\s+(?:to|i'll|i\s+will|that\s+i'll|that\s+i\s+will)|i\s+commit\s+to)\s+(.+)$/i;
+const NOT_PROMISE = /^(be honest|try|never|not|probably|maybe|see|think|have to see|let you know|be fine|be ok|be okay)\b/i;
+const CRISIS_MSG = "I'm stepping out of the Future Me voice for a moment, because this matters more. If you're thinking about hurting yourself, please talk to someone now. Call **Samaritans free on 116 123**, any time, day or night, or text **SHOUT to 85258**. You can also call **NHS 111**. If you're in immediate danger, call **999**. You don't have to carry this alone.";
+const CRISIS = /(kill myself|suicid|end it all|end my life|self[- ]?harm|hurt myself|don'?t want to (live|be here)|no reason to live|better off dead)/i;
+
+const BADGES = [
+  { id: "first", name: "First Step", desc: "Finish your first quest", test: s => s.count >= 1 },
+  { id: "s3", name: "On a Roll", desc: "3-day streak", test: s => s.best >= 3 },
+  { id: "s7", name: "Week Warrior", desc: "7-day streak", test: s => s.best >= 7 },
+  { id: "s30", name: "Unstoppable", desc: "30-day streak", test: s => s.best >= 30 },
+  { id: "promise1", name: "Promise Maker", desc: "Make your first promise", test: s => s.promisesMade >= 1 },
+  { id: "word", name: "Word Is Bond", desc: "Keep 5 promises", test: s => s.promisesKept >= 5 },
+  { id: "money", name: "Money Moves", desc: "5 Money quests", test: s => (s.byCat.money || 0) >= 5 },
+  { id: "create", name: "Creator", desc: "5 Create quests", test: s => (s.byCat.create || 0) >= 5 },
+  { id: "learn", name: "Student", desc: "10 Learn quests", test: s => (s.byCat.learn || 0) >= 10 },
+  { id: "biz", name: "Founder Mindset", desc: "5 Business quests", test: s => (s.byCat.business || 0) >= 5 },
+  { id: "health", name: "Strong Body", desc: "5 Health quests", test: s => (s.byCat.health || 0) >= 5 },
+  { id: "hard", name: "Hard Mode", desc: "10 Hard quests", test: s => (s.byDiff.hard || 0) >= 10 },
+  { id: "self", name: "Who I Am", desc: "Give Future Me 5 qualities", test: s => s.qualities >= 5 },
+  { id: "fifty", name: "Half Century", desc: "50 quests done", test: s => s.count >= 50 },
+  { id: "ceo", name: "CEO Status", desc: "Reach Level 8", test: s => levelInfo(s.xp).n >= 8 }
+];
+
+/* ---------- storage (this phone only) ---------- */
+const KEY = "futureChris.v1";
+let storageOK = true;
+function loadData() {
+  try {
+    localStorage.setItem("futureChris.test", "1"); localStorage.removeItem("futureChris.test");
+    const raw = localStorage.getItem(KEY);
+    if (!raw) return null;
+    const d = JSON.parse(raw);
+    return d && Array.isArray(d.tasks) ? d : null;
+  } catch (e) { storageOK = false; return null; }
+}
+function starterData() {
+  const t0 = Date.now();
+  const q = (i, title, cat, diff, repeat) => ({ id: "starter-" + i, title, cat, diff, repeat, done: false, created: t0 + i, starter: true });
+  return {
+    profile: clone(DEFAULT_PROFILE),
+    tasks: [
+      q(1, "Add Future Chris to my home screen", "life", "easy", "once"),
+      q(2, "Write my 'why' as a note and pin it", "life", "easy", "once"),
+      q(3, "Ask Future Me what to focus on this week", "business", "easy", "once"),
+      q(4, "30 minutes learning to code", "learn", "medium", "daily"),
+      q(5, "Log today's spending", "money", "easy", "daily"),
+      q(6, "Walk 20 minutes", "health", "easy", "daily"),
+      q(7, "Check my employer's rules on side businesses and social media", "business", "medium", "once"),
+      q(8, "Open a separate account for side-business money", "money", "medium", "once"),
+      q(9, "Outline my first YouTube video: my career journey to the UK", "create", "hard", "once")
+    ],
+    done: [],
+    notes: [
+      { id: "starter-q1", kind: "quote", text: "We are what we repeatedly do. Excellence, then, is not an act, but a habit.", by: "Will Durant", pinned: true, created: t0 + 11 },
+      { id: "starter-q2", kind: "quote", text: "The best time to plant a tree was 20 years ago. The second best time is now.", by: "Proverb", pinned: false, created: t0 + 12 },
+      { id: "starter-q3", kind: "quote", text: "Done is better than perfect.", by: "Common saying", pinned: false, created: t0 + 13 },
+      { id: "starter-n1", kind: "note", text: "Why do I want this? Write your reasons here, then pin this note so you see it on hard days.", by: "", pinned: false, created: t0 + 14 }
+    ],
+    chat: [],
+    books: { a: "Notes", b: "Journal" },
+    meta: { friendV: 1 }
+  };
+}
+const S = Object.assign({ confirmDel: null, confirmClear: false, noteFilter: "all", awaitWin: false, typing: false, book: "a" }, loadData() || starterData());
+const cloneRule = d => Object.assign({ on: true, builtin: true, action: "", chip: "" }, clone(d));
+function ensureBrain() {
+  if (!S.brain || !Array.isArray(S.brain.rules)) S.brain = { rules: [] };
+  const b = S.brain;
+  const custom = b.rules.filter(r => r && !r.builtin && r.id);
+  const builtins = DEFAULT_RULES.map(d => {
+    const ex = b.rules.find(r => r && r.builtin && r.id === d.id);
+    const r = ex ? Object.assign(cloneRule(d), ex) : cloneRule(d);
+    r.action = d.action || ""; r.builtin = true;
+    if (!Array.isArray(r.replies)) r.replies = clone(d.replies);
+    return r;
+  });
+  b.rules = custom.concat(builtins);
+  if (typeof b.style !== "string" || !b.style.trim()) b.style = DEFAULT_STYLE;
+  if (typeof b.signoff !== "string") b.signoff = "";
+  b.character = Object.assign(clone(DEFAULT_CHAR), b.character || {});
+  delete b.character.accountable;
+  if (!TONES[b.character.tone]) b.character.tone = "friend";
+  ["catchphrases", "rules"].forEach(k => { if (!Array.isArray(b.character[k])) b.character[k] = []; });
+  b.account = Object.assign(clone(DEFAULT_ACCOUNT), b.account || {});
+  if (!ACC[b.account.level]) b.account.level = "firm";
+  if (!/^\d\d:\d\d$/.test(b.account.checkinTime)) b.account.checkinTime = "08:00";
+  if (!/^\d\d:\d\d$/.test(b.account.eveningTime)) b.account.eveningTime = "20:30";
+  if (!Array.isArray(b.qualities)) b.qualities = DEFAULT_QUALITY_NAMES.map(n => makeQuality(QUALITY_LIBRARY.find(q => q.name === n)));
+}
+function normalize() {
+  ["tasks", "done", "notes", "chat"].forEach(k => { if (!Array.isArray(S[k])) S[k] = []; });
+  S.profile = Object.assign(clone(DEFAULT_PROFILE), S.profile || {});
+  S.books = Object.assign({ a: "Notes", b: "Journal" }, S.books || {});
+  ["a", "b"].forEach(k => { if (typeof S.books[k] !== "string" || !S.books[k].trim()) S.books[k] = k === "a" ? "Notes" : "Journal"; });
+  S.notes.forEach(n => { if (n.book !== "b") n.book = "a"; });
+  S.meta = Object.assign({ promisesMade: 0, moods: {}, ctx: null, welcomed: false, lastDelivered: 0, lastSeen: 0, missedFor: 0, friendV: 0 }, S.meta || {});
+  if (!S.meta.moods || typeof S.meta.moods !== "object") S.meta.moods = {};
+  delete S.meta.lastCheckin;
+  ensureBrain();
+  /* One-time switch to the friend voice for people who had the old default. */
+  if (S.meta.friendV !== 1) {
+    if (S.brain.character.tone === "mentor") { S.brain.character.tone = "friend"; S.brain.character.emoji = true; }
+    if (S.brain.style.indexOf("Warm, calm, confident and direct") === 0) S.brain.style = DEFAULT_STYLE;
+    S.meta.friendV = 1;
+  }
+}
+normalize();
+function save() {
+  if (!storageOK) return;
+  try {
+    localStorage.setItem(KEY, JSON.stringify({ v: 1, profile: S.profile, tasks: S.tasks, done: S.done, notes: S.notes, books: S.books, chat: S.chat.slice(-120), brain: S.brain, meta: S.meta }));
+  } catch (e) { storageOK = false; renderBanner(); toast("This browser stopped saving. Back up your data from Trophies."); }
+}
+save();
+const C = () => S.brain.character;
+const A = () => S.brain.account;
+const L = () => ACC[A().level] || ACC.firm;
+
+/* ---------- stats ---------- */
+function stats(done = S.done) {
+  const xp = done.reduce((a, d) => a + (Number(d.xp) || 0), 0);
+  const days = new Set(done.map(d => d.day));
+  const today = dayKey();
+  let cur = 0, d = new Date();
+  if (!days.has(dayKey(d))) d = addDays(d, -1);
+  while (days.has(dayKey(d))) { cur++; d = addDays(d, -1); }
+  let best = 0, run = 0, prev = null;
+  for (const k of [...days].sort()) {
+    run = (prev && dayKey(addDays(parseDay(prev), 1)) === k) ? run + 1 : 1;
+    best = Math.max(best, run); prev = k;
+  }
+  const byCat = {}, byDiff = {};
+  let todayXp = 0, promisesKept = 0;
+  for (const x of done) {
+    byCat[x.cat] = (byCat[x.cat] || 0) + 1;
+    byDiff[x.diff] = (byDiff[x.diff] || 0) + 1;
+    if (x.day === today) todayXp += Number(x.xp) || 0;
+    if (x.promise) promisesKept++;
+  }
+  return { xp, cur, best, todayXp, count: done.length, byCat, byDiff, days, promisesKept,
+    promisesMade: Math.max(S.meta.promisesMade || 0, promisesKept), qualities: S.brain.qualities.length };
+}
+const doneToday = id => { const t = dayKey(); return S.done.some(d => d.taskId === id && d.day === t); };
+
+/* ---------- UI helpers ---------- */
+let toastTimer;
+function toast(msg, kind) {
+  const t = $("#toast");
+  t.textContent = msg; t.className = "toast" + (kind ? " toast-" + kind : ""); t.hidden = false;
+  clearTimeout(toastTimer); toastTimer = setTimeout(() => { t.hidden = true; }, 2600);
+}
+function openSheet(id) { $(id).hidden = false; }
+$$(".scrim").forEach(s => s.addEventListener("click", e => { if (e.target === s || e.target.closest("[data-close]")) s.hidden = true; }));
+document.addEventListener("keydown", e => { if (e.key === "Escape") { const open = $$(".scrim").filter(s => !s.hidden).pop(); if (open) open.hidden = true; } });
+const catRadios = (name, prefix, checked) => Object.keys(CATS).map(c => '<label><input type="radio" name="' + name + '" id="' + prefix + c + '" value="' + c + '"' + (c === checked ? " checked" : "") + "><span>" + CATS[c] + "</span></label>").join("");
+const ICON_CHECK = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg>';
+const ICON_MORE = '<svg viewBox="0 0 24 24" fill="currentColor"><circle cx="5" cy="12" r="1.8"/><circle cx="12" cy="12" r="1.8"/><circle cx="19" cy="12" r="1.8"/></svg>';
+const ICON_MEDAL = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="14.5" r="5.5"/><path d="M8.5 10 6 3h4l2 5 2-5h4l-2.5 7"/><path d="m12 12 .9 1.8 2 .3-1.5 1.4.4 2-1.8-1-1.8 1 .4-2-1.5-1.4 2-.3Z" fill="currentColor" stroke="none"/></svg>';
+const ICON_LOCK = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="5" y="11" width="14" height="10" rx="2"/><path d="M8 11V8a4 4 0 0 1 8 0v3"/></svg>';
+const currentTab = () => { const h = location.hash.replace("#", ""); return ["quests", "future", "notes", "trophies"].includes(h) ? h : "quests"; };
+
+/* ---------- render: app ---------- */
+function render() { renderHeader(); renderQuests(); renderNotes(); renderTrophies(); renderFutureHead(); renderChat(); renderTopics(); }
+function renderBanner() {
+  const msg = storageOK ? "" : "This browser isn't letting the app save (private browsing is usually the cause). Open the link in a normal tab so your progress is kept.";
+  $("#banner").hidden = !msg; $("#bannerText").textContent = msg;
+}
+function renderTabBadge() {
+  const n = S.chat.filter(t => t.unread).length, el = $("#unreadCount");
+  el.hidden = !n; el.textContent = n > 9 ? "9+" : String(n);
+  $("[data-tab=future]").setAttribute("aria-label", "Future Me" + (n ? ", " + n + " new messages" : ""));
+}
+function renderHeader() {
+  const s = stats(), Lv = levelInfo(s.xp), p = S.profile;
+  $("#chipLvl").textContent = Lv.n; $("#chipXp").textContent = fmt(s.xp) + " XP";
+  $("#heroLvl").textContent = Lv.n; $("#heroRank").textContent = Lv.rank;
+  $("#xpFill").style.width = Math.round(Lv.pct * 100) + "%";
+  $("#ringProg").style.strokeDashoffset = (213.63 * (1 - Lv.pct)).toFixed(2);
+  $("#xpLine").textContent = fmt(Lv.into) + " / " + fmt(Lv.span) + " XP to Level " + (Lv.n + 1);
+  const h = new Date().getHours();
+  $("#greet").textContent = (h < 5 ? "Still up, " : h < 12 ? "Good morning, " : h < 17 ? "Good afternoon, " : "Good evening, ") + p.name;
+  $("#streakTxt").textContent = s.cur + "-day streak";
+  $("#todayXp").textContent = "+" + s.todayXp + " XP today";
+  const quotes = S.notes.filter(n => n.kind === "quote" && n.text).sort((a, b) => (a.created || 0) - (b.created || 0));
+  if (quotes.length) {
+    const q = quotes[Math.floor(parseDay(dayKey()).getTime() / 864e5) % quotes.length];
+    $("#qotd").hidden = false; $("#qotdText").textContent = "\u201C" + q.text + "\u201D"; $("#qotdBy").textContent = q.by ? "\u2014 " + q.by : "";
+  } else $("#qotd").hidden = true;
+  renderTabBadge();
+}
+function taskRow(t) {
+  const daily = t.repeat === "daily";
+  const isDone = daily ? doneToday(t.id) : !!t.done;
+  const xp = (DIFF[t.diff] || DIFF.medium).xp;
+  const tags = [];
+  if (daily) tags.push('<span class="tag">Daily</span>');
+  if (t.promise) tags.push('<span class="tag promise">Promise</span>');
+  else if (t.from === "future") tags.push('<span class="tag">From Future Me</span>');
+  else if (t.starter) tags.push('<span class="tag">Starter</span>');
+  const confirming = S.confirmDel === "t:" + t.id;
+  const right = confirming
+    ? '<div class="confirm-row"><button class="btn danger sm" data-act="del-task" data-id="' + esc(t.id) + '">Delete</button><button class="btn ghost sm" data-act="cancel-del">Keep</button></div>'
+    : '<button class="more" data-act="ask-del" data-key="t:' + esc(t.id) + '" aria-label="Delete ' + esc(t.title) + '">' + ICON_MORE + "</button>";
+  return '<div class="task' + (isDone ? " is-done" : "") + '">' +
+    '<button class="check" data-act="toggle" data-id="' + esc(t.id) + '" aria-pressed="' + isDone + '" aria-label="' + (isDone ? "Undo: " : "Complete: ") + esc(t.title) + '">' + ICON_CHECK + "</button>" +
+    '<div class="task-body"><div class="task-title">' + esc(t.title) + '</div><div class="meta"><span class="cat cat-' + esc(t.cat) + '">' + esc(CATS[t.cat] || "Life") + '</span><span class="xp">+' + xp + " XP</span>" + tags.join("") + "</div></div>" +
+    right + "</div>";
+}
+function renderQuests() {
+  const byCreated = (a, b) => (a.created || 0) - (b.created || 0);
+  const habits = S.tasks.filter(t => t.repeat === "daily").sort(byCreated);
+  const open = S.tasks.filter(t => t.repeat !== "daily" && !t.done).sort(byCreated);
+  const closed = S.tasks.filter(t => t.repeat !== "daily" && t.done).sort((a, b) => (b.doneAt || 0) - (a.doneAt || 0)).slice(0, 15);
+  const hd = habits.filter(t => doneToday(t.id)).length;
+  $("#habitCount").textContent = habits.length ? hd + " / " + habits.length + " today" : "";
+  $("#questCount").textContent = open.length ? open.length + " open" : "";
+  $("#habitList").innerHTML = habits.length ? '<div class="panel list">' + habits.map(taskRow).join("") + "</div>"
+    : '<div class="empty"><strong>No daily habits yet.</strong> Add one with New quest and choose “Daily habit”. It resets every morning.</div>';
+  $("#questList").innerHTML = open.length ? '<div class="panel list">' + open.map(taskRow).join("") + "</div>"
+    : '<div class="empty"><strong>All clear.</strong> Tap New quest, or ask Future Me to suggest some.</div>';
+  $("#doneWrap").hidden = !closed.length;
+  $("#doneSummary").textContent = "Completed (" + closed.length + ")";
+  $("#doneList").innerHTML = closed.map(taskRow).join("");
+}
+function notePlaceholder() {
+  const k = ($("input[name=nkind]:checked") || {}).value || "note";
+  if (k === "note") return S.book === "b" ? "How was today? What's on your mind?" : "Write a thought, a lesson, a plan…";
+  return { quote: "Type the quote…", idea: "A video, a business, an app…", win: "What went well today?" }[k];
+}
+function renderNotes() {
+  const inBook = S.notes.filter(n => n.book === S.book);
+  ["a", "b"].forEach(k => {
+    const on = S.book === k, el = $("#book" + k.toUpperCase());
+    el.setAttribute("aria-selected", on ? "true" : "false");
+    $("#book" + k.toUpperCase() + "Name").textContent = S.books[k];
+    $("#book" + k.toUpperCase() + "Count").textContent = S.notes.filter(n => n.book === k).length;
+  });
+  $("#renameBook").setAttribute("aria-label", "Rename " + S.books[S.book]);
+  $("#noteText").placeholder = notePlaceholder();
+  const kinds = [["all", "All"], ["note", "Notes"], ["quote", "Quotes"], ["idea", "Ideas"], ["win", "Wins"]];
+  $("#noteFilters").innerHTML = kinds.map(([k, l]) => {
+    const n = k === "all" ? inBook.length : inBook.filter(x => x.kind === k).length;
+    return '<button class="filter" data-act="filter" data-k="' + k + '" aria-pressed="' + (S.noteFilter === k) + '">' + l + ' <span class="num">' + n + "</span></button>";
+  }).join("");
+  const list = inBook.filter(n => S.noteFilter === "all" || n.kind === S.noteFilter)
+    .sort((a, b) => (b.pinned ? 1 : 0) - (a.pinned ? 1 : 0) || (b.created || 0) - (a.created || 0));
+  if (!list.length) { $("#noteList").innerHTML = '<div class="empty"><strong>Nothing in ' + esc(S.books[S.book]) + (S.noteFilter === "all" ? "" : " here") + ' yet.</strong> ' + (S.book === "b" ? "Write a few lines about your day. Future you will love reading them back." : "Save quotes that fire you up, ideas for videos or a business, and wins, big or small.") + "</div>"; return; }
+  const label = { note: "Note", quote: "Quote", idea: "Idea", win: "Win" };
+  $("#noteList").innerHTML = list.map(n => {
+    const confirming = S.confirmDel === "n:" + n.id;
+    const date = n.created ? new Date(n.created).toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric" }) : "";
+    return '<article class="panel nt ' + esc(n.kind) + '">' +
+      '<div class="nt-kind">' + (label[n.kind] || "Note") + (n.pinned ? ' <span class="pin-on">· Pinned</span>' : "") + "</div>" +
+      '<p class="nt-text">' + (n.kind === "quote" ? "\u201C" + esc(n.text) + "\u201D" : esc(n.text)) + "</p>" +
+      (n.kind === "quote" && n.by ? "<cite>\u2014 " + esc(n.by) + "</cite>" : "") +
+      '<div class="nt-foot"><time>' + date + "</time>" +
+      (confirming
+        ? '<button class="btn danger sm" data-act="del-note" data-id="' + esc(n.id) + '">Delete</button><button class="btn ghost sm" data-act="cancel-del">Keep</button>'
+        : '<button class="mini' + (n.pinned ? " on" : "") + '" data-act="pin" data-id="' + esc(n.id) + '" aria-pressed="' + !!n.pinned + '">' + (n.pinned ? "Pinned" : "Pin") + '</button><button class="mini del" data-act="ask-del" data-key="n:' + esc(n.id) + '">Delete</button>') +
+      "</div></article>";
+  }).join("");
+}
+function renderTrophies() {
+  const s = stats(), Lv = levelInfo(s.xp);
+  $("#statGrid").innerHTML = [
+    ["Total XP", fmt(s.xp)], ["Quests done", fmt(s.count)], ["Current streak", s.cur + (s.cur === 1 ? " day" : " days")], ["Promises kept", fmt(s.promisesKept)]
+  ].map(([k, v]) => '<div class="panel stat"><small>' + k + "</small><strong>" + v + "</strong></div>").join("");
+  const today = new Date(); today.setHours(0, 0, 0, 0);
+  const start = addDays(today, -27), lead = (start.getDay() + 6) % 7;
+  let html = ["M", "T", "W", "T", "F", "S", "S"].map(d => '<div class="dow">' + d + "</div>").join("");
+  for (let i = 0; i < lead; i++) html += '<div class="d blank"></div>';
+  let active = 0;
+  for (let i = 0; i < 28; i++) {
+    const d = addDays(start, i), k = dayKey(d), on = s.days.has(k);
+    if (on) active++;
+    html += '<div class="d' + (on ? " on" : "") + (i === 27 ? " today" : "") + '" title="' + k + '">' + d.getDate() + "</div>";
+  }
+  $("#cal").innerHTML = html;
+  $("#calNote").textContent = active + " active " + (active === 1 ? "day" : "days") + " · best streak " + s.best;
+  $("#badgeCount").textContent = BADGES.filter(b => b.test(s)).length + " / " + BADGES.length;
+  $("#badgeGrid").innerHTML = BADGES.map(b => {
+    const ok = b.test(s);
+    return '<div class="panel badge' + (ok ? "" : " locked") + '"><div class="medal">' + (ok ? ICON_MEDAL : ICON_LOCK) + "</div><b>" + b.name + "</b><span>" + b.desc + "</span></div>";
+  }).join("");
+  let lad = "";
+  for (let n = 1; n <= 10; n++) {
+    const cls = ["rung"]; if (Lv.n > n) cls.push("reached"); if (Lv.n === n) cls.push("current", "reached"); if (n === 8) cls.push("ceo");
+    lad += '<div class="' + cls.join(" ") + '"><span class="ln">Lv ' + n + '</span><span class="rn">' + RANKS[n - 1] + '</span><span class="rx">' + fmt(levelStart(n)) + " XP</span></div>";
+  }
+  $("#ladder").innerHTML = lad;
+  $("#catList").innerHTML = Object.keys(CATS).map(c => '<div class="catrow"><span class="cat cat-' + c + '">' + CATS[c] + "</span><span>" + (s.byCat[c] || 0) + "</span></div>").join("");
+}
+
+/* ---------- quests ---------- */
+$("#qCats").innerHTML = catRadios("qcat", "qc-", "learn");
+$("#qlCats").innerHTML = catRadios("qlcat", "qlc-", "life");
+$("#newQuestBtn").addEventListener("click", () => { openSheet("#sheetQuest"); setTimeout(() => $("#qTitle").focus(), 60); });
+function addQuest(title, cat, diff, repeat, from, extra) {
+  S.tasks.push(Object.assign({ id: uid(), title, cat: CATS[cat] ? cat : "life", diff: DIFF[diff] ? diff : "medium", repeat, done: false, created: Date.now(), from }, extra || {}));
+  save(); renderQuests();
+}
+$("#questForm").addEventListener("submit", e => {
+  e.preventDefault();
+  const title = $("#qTitle").value.trim();
+  if (!title) { $("#qTitle").focus(); toast("Give your quest a name first."); return; }
+  const cat = ($("input[name=qcat]:checked") || {}).value || "life";
+  const diff = ($("input[name=qdiff]:checked") || {}).value || "medium";
+  const repeat = ($("input[name=qrep]:checked") || {}).value || "once";
+  $("#sheetQuest").hidden = true; $("#qTitle").value = "";
+  addQuest(title.slice(0, 90), cat, diff, repeat, "me");
+  toast(repeat === "daily" ? "Daily habit added" : "Quest added");
+});
+function toggleTask(id) {
+  const t = S.tasks.find(x => x.id === id); if (!t) return;
+  const today = dayKey(), daily = t.repeat === "daily";
+  const xp = (DIFF[t.diff] || DIFF.medium).xp;
+  const isDone = daily ? doneToday(id) : !!t.done;
+  if (isDone) {
+    S.done = S.done.filter(d => !(d.taskId === id && (!daily || d.day === today)));
+    if (!daily) { t.done = false; t.doneAt = null; }
+    save(); render(); toast("Undone · \u2212" + xp + " XP");
+    return;
+  }
+  const before = stats();
+  S.done.push({ id: uid(), taskId: id, title: t.title, cat: t.cat, diff: t.diff, xp, day: today, at: Date.now(), promise: !!t.promise });
+  if (!daily) { t.done = true; t.doneAt = Date.now(); }
+  save(); render();
+  celebrate(before, stats(), xp, !!t.promise);
+}
+function celebrate(before, after, xp, promise) {
+  const lb = levelInfo(before.xp), la = levelInfo(after.xp);
+  const fresh = BADGES.filter(b => !b.test(before) && b.test(after));
+  const head = "+" + xp + " XP" + (promise ? " · Promise kept!" : "");
+  if (la.n > lb.n) {
+    $("#luNum").textContent = la.n; $("#luRank").textContent = la.rank;
+    $("#luNext").textContent = la.n < 10 ? "Next: " + RANKS[Math.min(la.n, 9)] + " at " + fmt(la.next) + " XP" : "Top rank. Keep stacking XP.";
+    $("#levelUp").hidden = false;
+    toast(fresh.length ? "Badge unlocked: " + fresh[0].name : head, "xp");
+  } else if (fresh.length) toast(head + " · Badge: " + fresh[0].name, "xp");
+  else toast(head, "xp");
+}
+
+/* ---------- notes ---------- */
+function addNote(kind, text, by, book) {
+  S.notes.push({ id: uid(), kind, text: String(text).slice(0, 4000), by: by || "", pinned: false, created: Date.now(), book: book === "b" ? "b" : "a" });
+  save(); renderNotes(); renderHeader();
+}
+$$("input[name=nkind]").forEach(r => r.addEventListener("change", () => {
+  const k = $("input[name=nkind]:checked").value;
+  $("#noteBy").hidden = k !== "quote";
+  $("#noteText").placeholder = notePlaceholder();
+}));
+$("#noteForm").addEventListener("submit", e => {
+  e.preventDefault();
+  const text = $("#noteText").value.trim();
+  if (!text) { $("#noteText").focus(); return; }
+  const kind = $("input[name=nkind]:checked").value;
+  addNote(kind, text, kind === "quote" ? $("#noteBy").value.trim() : "", S.book);
+  $("#noteText").value = ""; $("#noteBy").value = "";
+  toast(kind === "win" ? "Win saved. Nice work." : "Saved");
+});
+
+$("#renameBook").addEventListener("click", () => { $("#bkName").value = S.books[S.book]; openSheet("#sheetBook"); setTimeout(() => $("#bkName").select(), 60); });
+$("#bookForm").addEventListener("submit", e => {
+  e.preventDefault();
+  const name = $("#bkName").value.trim().slice(0, 20);
+  if (!name) { toast("Give the notebook a name."); $("#bkName").focus(); return; }
+  S.books[S.book] = name; save(); $("#sheetBook").hidden = true; renderNotes(); toast("Renamed to " + name);
+});
+
+/* ---------- Future Me: engine ---------- */
+const NEVER = { test: () => false };
+const reCache = new Map();
+function ruleRe(words) {
+  const key = String(words || "");
+  if (reCache.has(key)) return reCache.get(key);
+  const parts = key.split(",").map(w => w.trim().toLowerCase()).filter(Boolean)
+    .map(w => w.replace(/\u2019/g, "'").replace(/[.*+?^${}()|[\]\\]/g, "\\$&").replace(/'/g, "['\u2019]?").replace(/\s+/g, "\\s+"));
+  let re = null;
+  try { if (parts.length) re = new RegExp("(?:^|[^\\p{L}\\p{N}])(?:" + parts.join("|") + ")(?:s|es|ed|d|ing|er|ers)?(?=$|[^\\p{L}\\p{N}])", "iu"); } catch (e) { re = null; }
+  reCache.set(key, re); return re;
+}
+const hits = (words, text) => (ruleRe(words) || NEVER).test(text);
+const ruleById = id => S.brain.rules.find(r => r.id === id);
+const qualityWords = q => [String(q.name || "").replace(/^(a|an|the)\s+/i, ""), q.words].filter(Boolean).join(", ");
+const findQuality = text => S.brain.qualities.find(q => hits(qualityWords(q), text));
+const lastPick = {};
+const okText = t => !hits(C().never, String(t));
+function pickFrom(arr, key) {
+  let pool = (arr || []).map(String).filter(x => x.trim());
+  if (!pool.length) return null;
+  const clean = pool.filter(okText);
+  if (clean.length) pool = clean;
+  let i = Math.floor(Math.random() * pool.length);
+  if (pool.length > 1 && pool[i] === lastPick[key]) i = (i + 1) % pool.length;
+  lastPick[key] = pool[i];
+  return pool[i];
+}
+function pickQuality() {
+  const qs = S.brain.qualities; if (!qs.length) return null;
+  let i = Math.floor(Math.random() * qs.length);
+  if (qs.length > 1 && qs[i].id === lastPick.quality) i = (i + 1) % qs.length;
+  lastPick.quality = qs[i].id; return qs[i];
+}
+function youName() {
+  const list = String(C().calls || "").split(",").map(x => x.trim()).filter(Boolean);
+  return list.length ? rand(list) : S.profile.name;
+}
+function nextStep() {
+  const byCreated = (a, b) => (a.created || 0) - (b.created || 0);
+  const promise = S.tasks.filter(t => t.promise && !t.done).sort(byCreated)[0];
+  const quest = S.tasks.filter(t => t.repeat !== "daily" && !t.done).sort(byCreated)[0];
+  const habit = S.tasks.filter(t => t.repeat === "daily" && !doneToday(t.id)).sort(byCreated)[0];
+  const t = promise || quest || habit;
+  return t ? t.title : "add one quest you can finish in 20 minutes";
+}
+function quoteLine() {
+  const qs = S.notes.filter(n => n.kind === "quote");
+  if (!qs.length) return "Small steps, every day.";
+  const q = rand(qs);
+  return "\u201C" + q.text + "\u201D" + (q.by ? " (" + q.by + ")" : "");
+}
+function fill(s) {
+  const st = stats(), Lv = levelInfo(st.xp), p = S.profile;
+  return String(s).replace(/\{you\}/g, () => youName()).replace(/\{name\}/g, () => p.name).replace(/\{year\}/g, () => p.year)
+    .replace(/\{level\}/g, () => Lv.n).replace(/\{rank\}/g, () => Lv.rank).replace(/\{streak\}/g, () => st.cur)
+    .replace(/\{next\}/g, () => nextStep()).replace(/\{quote\}/g, () => quoteLine());
+}
+const fillQ = (tpl, q) => fill(String(tpl).replace(/\{q\}/g, () => lowerFirst(q.name)).replace(/\{how\}/g, () => endStop(q.how))).replace(/\s+$/, "");
+const emo = s => C().emoji ? s : s.replace(/\s*[\u{1F300}-\u{1FAFF}\u2600-\u27BF\u2B50\u2763\u{1F004}]\uFE0F?/gu, "");
+function finish(text) { const so = S.brain.signoff.trim(); return so ? text + "\n\n" + fill(so) : text; }
+function suggestQuests(n) {
+  const have = new Set(S.tasks.map(t => t.title.toLowerCase()));
+  const pool = QUEST_BANK.filter(q => !have.has(q[0].toLowerCase())).sort(() => Math.random() - 0.5);
+  const out = [], cats = new Set();
+  for (const q of pool) { if (out.length >= n) break; if (!cats.has(q[1])) { out.push(q); cats.add(q[1]); } }
+  for (const q of pool) { if (out.length >= n) break; if (!out.includes(q)) out.push(q); }
+  return out.map(([title, cat, diff]) => ({ title, cat, diff, added: false }));
+}
+
+/* Wraps a reply in the voice, qualities and accountability you chose. Each BR becomes its own text bubble. */
+function decorate(base, r, q) {
+  const c = C(), tone = TONES[c.tone] || TONES.plain, st = stats();
+  const quiet = !!(r && (r.action === "askwin" || r.id === "winsaved" || r.action === "quality" || r.small));
+  const opener = !quiet && Math.random() < 0.45 ? pickFrom(tone.open, "open") : null;
+  let main = base;
+  if (c.emoji && !quiet && Math.random() < 0.5) main += " " + rand(tone.emoji);
+  const extras = [], next = nextStep(), mentionsNext = main.includes(next);
+  if (!quiet && A().nudge && st.todayXp === 0 && new Date().getHours() >= 12 && !mentionsNext) extras.push(fill(L().nudge));
+  const qual = quiet ? null : (q || (Math.random() < 0.4 ? pickQuality() : null));
+  if (qual && extras.length < 2) extras.push(fillQ(pickFrom(QUALITY_LINES, "ql"), qual));
+  if (!quiet && c.remindNext && !mentionsNext && !extras.some(x => x.includes(next)) && extras.length < 2) extras.push(fill("Next up: **{next}**"));
+  const freq = { never: 0, some: 0.35, often: 0.7 }[c.catchFreq] || 0;
+  if (extras.length < 2 && c.catchphrases.length && Math.random() < freq) { const cp = pickFrom(c.catchphrases, "catch"); if (cp) extras.push(fill(cp)); }
+  if (extras.length < 2 && c.rules.length && Math.random() < 0.25) { const ru = pickFrom(c.rules, "rule"); if (ru) extras.push("Remember the rule I live by: **" + fill(ru) + "**"); }
+  if (extras.length < 2 && !quiet && c.streak && st.cur >= 2 && Math.random() < 0.4) extras.push(st.cur + "-day streak. Don't break it." + (c.emoji ? " \u{1F525}" : ""));
+  if (extras.length < 2 && !quiet && Math.random() < 0.3) { const cl = pickFrom(tone.close, "close"); if (cl) extras.push(fill(cl)); }
+  return (opener ? [fill(opener)] : []).concat([main], extras).join(BR);
+}
+function pickReply(r, q) {
+  const raw = pickFrom(r && r.replies, r && r.id);
+  if (raw == null) return r && r.id !== "fallback" ? pickReply(ruleById("fallback"), q) : "Tell me more.";
+  return decorate(fill(raw), r, q);
+}
+function whoamiText(r) {
+  const qs = S.brain.qualities;
+  if (!qs.length) return fill("I'm you, {you}, in {year} 😄" + BR + "You haven't given me my qualities yet though. Tap Teach and add the qualities you're growing into, and I'll live them out every time we talk.");
+  return fill(pickFrom(r.replies, r.id) || "I'm you, {you}, in {year}.") + "\n" +
+    qs.map(q => "- **" + q.name + "**" + (q.how ? ": " + firstSentence(q.how) : "")).join("\n") +
+    BR + fill("Which one do you want to work on today, {you}?");
+}
+function reviewText(r) {
+  const t = dayKey();
+  const doneT = S.done.filter(d => d.day === t);
+  const xp = doneT.reduce((a, d) => a + (Number(d.xp) || 0), 0);
+  const left = S.tasks.filter(x => x.repeat === "daily" && !doneToday(x.id));
+  const promises = S.tasks.filter(x => x.promise && !x.done);
+  const parts = [fill(pickFrom(r.replies, r.id) || "Let's look at your day.")];
+  const body = [];
+  if (doneT.length) body.push("Done today: " + doneT.length + (doneT.length === 1 ? " quest" : " quests") + " (+" + xp + " XP).\n" + doneT.slice(-4).map(d => "- " + d.title).join("\n"));
+  else body.push(fill(L().zeroToday));
+  if (left.length) body.push("Daily habits still to do:\n" + left.map(x => "- " + x.title).join("\n"));
+  promises.slice(0, 2).forEach(p => body.push(fill(L().promiseOpen.replace("{p}", () => p.title))));
+  parts.push(body.join("\n\n"));
+  parts.push(doneT.length && !left.length ? fill("That's a strong day, {you}. This is exactly how I got here.") : fill("Your next move: **{next}**."));
+  return parts.join(BR);
+}
+function qualityReply(q) {
+  let t = fillQ(pickFrom(QUALITY_REPLIES, "qr"), q);
+  const have = q.action && S.tasks.some(x => x.title.toLowerCase() === q.action.toLowerCase() && (x.repeat === "daily" || !x.done));
+  if (q.action && !have) t += BR + "It started with one small habit: **" + q.action + "**. Want it as a quest?";
+  else t += BR + "It didn't happen overnight. Pick one quest today and do it the way I would.";
+  const out = { text: decorate(t, { action: "quality" }, null) };
+  if (q.action && !have) out.offers = [{ title: q.action, cat: CATS[q.cat] ? q.cat : "life", diff: "easy", added: false }];
+  return out;
+}
+function staleQuests() {
+  const now = Date.now();
+  return S.tasks.filter(t => t.repeat !== "daily" && !t.done && t.created && now - t.created > 3 * 864e5)
+    .map(t => ({ t, d: Math.floor((now - t.created) / 864e5) })).sort((a, b) => b.d - a.d);
+}
+function welcomeText() {
+  return fill("Hey {you}! 👋") + BR +
+    fill("It's me. Well… you, from {year} 😄 The version of you who made it.") + BR +
+    "I'll check in on you every morning and evening, like a friend would. Tap the bell at the top to change the times, or to get reminders on your phone." + BR +
+    "So tell me, how are you feeling today?";
+}
+function missedText() {
+  return fill("Oi {you}, where've you been? 😄 I've missed you.") + BR + fill("No judgement at all, life gets busy. Let's just do one small thing today: **{next}**.");
+}
+function morningText() {
+  const st = stats(), yk = dayKey(addDays(new Date(), -1));
+  const yDone = S.done.filter(d => d.day === yk);
+  const recap = [];
+  if (yDone.length) recap.push("Yesterday you got " + yDone.length + (yDone.length === 1 ? " quest" : " quests") + " done (+" + yDone.reduce((a, d) => a + (Number(d.xp) || 0), 0) + " XP). Proud of you, honestly.");
+  else if (S.done.some(d => d.day < yk)) recap.push(fill(L().missedYesterday));
+  if ((S.meta.moods[yk] || 9) <= 2) recap.push("You were feeling low yesterday. I've been thinking about you.");
+  if (st.cur >= 2) recap.push("You're on a " + st.cur + "-day streak. Let's keep it alive.");
+  S.tasks.filter(t => t.promise && !t.done).slice(0, 2).forEach(p => recap.push(fill(L().promiseOpen.replace("{p}", () => p.title))));
+  if (A().stale) { const old = staleQuests().find(x => !x.t.promise); if (old) recap.push(fill(L().stale.replace("{t}", () => old.t.title).replace("{d}", () => old.d))); }
+  const left = S.tasks.filter(t => t.repeat === "daily" && !doneToday(t.id)).length;
+  const q = pickQuality();
+  const plan = fill(left ? "Today: " + left + (left === 1 ? " daily habit" : " daily habits") + ", and your next quest is **{next}**." : "Today, your next quest is **{next}**.") +
+    (q ? "\n\nToday's quality: **" + q.name + "**." + (q.how ? " " + firstSentence(q.how) : "") : "");
+  return [fill(pickFrom(["Morning {you} ☀️", "Good morning {you}! ☀️", "Rise and shine, {you} ☀️"], "gm")), recap.join("\n\n"), plan, "How are you feeling today?"].filter(Boolean).join(BR);
+}
+function eveningText() {
+  const t = dayKey(), doneT = S.done.filter(d => d.day === t);
+  const left = S.tasks.filter(x => x.repeat === "daily" && !doneToday(x.id));
+  const promises = S.tasks.filter(x => x.promise && !x.done);
+  const body = [];
+  if (doneT.length) body.push("You got " + doneT.length + (doneT.length === 1 ? " quest" : " quests") + " done today (+" + doneT.reduce((a, d) => a + (Number(d.xp) || 0), 0) + " XP).");
+  else body.push(fill(L().zeroToday));
+  if (left.length) body.push("Still to do:\n" + left.map(x => "- " + x.title).join("\n"));
+  promises.slice(0, 1).forEach(p => body.push(fill(L().promiseOpen.replace("{p}", () => p.title))));
+  return [fill(pickFrom(["Hey {you}, how did today go? 🌙", "Evening {you} 🌙 Quick catch-up?"], "ge")), body.join("\n\n"),
+    doneT.length && !left.length ? "Did today feel like a win?" : "Did you get your main thing done today?"].join(BR);
+}
+function promiseFrom(text) {
+  const t = String(text).replace(/[\u2018\u2019]/g, "'").trim();
+  if (t.length > 160 || t.includes("?")) return null;
+  const m = t.match(PROMISE_RE); if (!m) return null;
+  const act = m[1].trim().replace(/[.!]+$/, "").trim();
+  if (act.length < 3 || NOT_PROMISE.test(act)) return null;
+  return (act.charAt(0).toUpperCase() + act.slice(1)).slice(0, 90);
+}
+function guessCat(m, text) {
+  if (/\b(gym|walk|run|train|workout|sleep|water|exercise|stretch|eat)/i.test(text)) return "health";
+  if (m.kind === "quality") return CATS[m.q.cat] ? m.q.cat : "life";
+  return (m.rule && RULE_CAT[m.rule.id]) || "life";
+}
+function moodFrom(text) {
+  const t = " " + String(text).toLowerCase() + " ";
+  const n = t.match(/[^\d]([1-5])(?:\s*\/\s*5|\s*out of\s*5)?[^\d]/); if (n) return +n[1];
+  if (/\b(terrible|awful|horrible|the worst|really bad|very bad|depressed|shit|crap)\b/.test(t)) return 1;
+  if (/\b(not bad|not too bad|alright|okay|ok|fine|so so|so-so|average|meh|not sure)\b/.test(t)) return 3;
+  if (/\b(not great|not good|not well|bad|sad|low|down|rubbish|tired|stressed|rough|upset)\b/.test(t)) return 2;
+  if (/\b(great|amazing|brilliant|buzzing|fantastic|excellent|on top of the world|best)\b/.test(t)) return 5;
+  if (/\b(good|well|decent|happy|positive)\b/.test(t)) return 4;
+  return 0;
+}
+function moodReply(n) {
+  S.meta.moods[dayKey()] = n;
+  const parts = [fill(pickFrom(MOOD_LINES[n], "mood" + n))];
+  const out = {};
+  if (n === 1) parts.push("And if it's more than a bad day, please talk to someone you trust, or Samaritans on 116 123, any time. You matter 💙");
+  if (n <= 2) { parts.push("Do you want to talk about it?"); S.meta.ctx = { awaiting: "yesno", topic: "feelingbad", at: Date.now() }; out.quick = YESNO; }
+  else if (n === 3) parts.push(fill("Start small: **{next}**."));
+  else parts.push(fill("First move: **{next}**. Go!"));
+  out.text = parts.join(BR);
+  return out;
+}
+/* Decide what answers a message: your lessons, "who are you", your qualities, then the built-in lessons. */
+function routeMsg(text) {
+  if (CRISIS.test(text)) return { kind: "crisis" };
+  const live = S.brain.rules.filter(r => r.on !== false && r.action !== "system" && r.action !== "askwin");
+  const custom = live.find(r => !r.builtin && hits(r.words, text));
+  if (custom) return { kind: "rule", rule: custom, q: findQuality(text) };
+  const who = live.find(r => r.builtin && r.action === "whoami" && hits(r.words, text));
+  if (who) return { kind: "rule", rule: who };
+  const q = findQuality(text);
+  if (q) return { kind: "quality", q };
+  const built = live.find(r => r.builtin && hits(r.words, text));
+  return { kind: "rule", rule: built || ruleById("fallback") };
+}
+const SMALL = ["howareyou", "feelingbad", "feelinggood", "thanks", "laugh", "goodnight", "love", "hello"];
+function compose(m, text, fromChip, dry) {
+  if (m.kind === "quality") return qualityReply(m.q);
+  const r = m.rule;
+  const rr = SMALL.includes(r.id) ? Object.assign({}, r, { small: true }) : r;
+  switch (r.action) {
+    case "quests": {
+      const offers = suggestQuests(3);
+      return offers.length ? { text: pickReply(rr), offers } : { text: fill("You've already got every quest I'd suggest, {you} 😄 Add your own with New quest, or tap Copy for Claude for fresh ideas.") };
+    }
+    case "whoami": return { text: whoamiText(r) };
+    case "review": return { text: reviewText(r) };
+    case "askwin": if (!dry) S.awaitWin = true; return { text: fill(pickFrom(r.replies, r.id) || "Tell me about it.") };
+    case "askmood": if (!dry) S.meta.ctx = { awaiting: "mood", at: Date.now() }; return { text: pickReply(rr), quick: MOOD_QUICK };
+    case "win": { const out = { text: pickReply(rr, m.q) }; if (!fromChip) out.winOffer = text; return out; }
+    default: return { text: pickReply(rr, m.q) };
+  }
+}
+function withFollow(out, r, dry) {
+  const f = r && FOLLOW[r.id];
+  if (!f || !f.ask || out.quick || out.offers || out.winOffer) return out;
+  const la = S.meta.lastAsk;
+  if (!dry && la && la.topic === r.id && Date.now() - la.at < 10 * 60000) return out;
+  out.text += BR + fill(pickFrom(f.ask, "ask-" + r.id));
+  out.quick = YESNO;
+  if (!dry) { S.meta.ctx = { awaiting: "yesno", topic: r.id, at: Date.now() }; S.meta.lastAsk = { topic: r.id, at: Date.now() }; }
+  return out;
+}
+function setCtx(name) {
+  const f = FOLLOW[name];
+  S.meta.ctx = f && f.reply ? { awaiting: name, at: Date.now() } : { awaiting: "yesno", topic: name, at: Date.now() };
+}
+function handleCtx(ctx, text, value) {
+  const t = String(text).trim();
+  if (ctx.awaiting === "mood") {
+    const n = value && value.indexOf("mood:") === 0 ? +value.slice(5) : moodFrom(t);
+    if (!n) return null;
+    S.meta.ctx = null; return moodReply(n);
+  }
+  if (ctx.awaiting === "yesno") {
+    const ans = value === "yes" || value === "no" ? value : NO_RE.test(t) ? "no" : YES_RE.test(t) ? "yes" : null;
+    const f = FOLLOW[ctx.topic];
+    if (!ans || !f) return null;
+    S.meta.ctx = null;
+    const out = { text: fill(pickFrom(f[ans], "f-" + ctx.topic + ans) || "Got you.") };
+    const nxt = f[ans + "Ctx"]; if (nxt) setCtx(nxt);
+    if (ans === "no" && f.noOffer) out.offers = [Object.assign({ added: false }, f.noOffer)];
+    return out;
+  }
+  const f = FOLLOW[ctx.awaiting];
+  if (f && f.reply) {
+    S.meta.ctx = null;
+    const out = { text: fill(pickFrom(f.reply, "r-" + ctx.awaiting)) };
+    if (f.next) setCtx(f.next);
+    if (f.quick) out.quick = f.quick;
+    return out;
+  }
+  return null;
+}
+function respond(text, opts) {
+  opts = opts || {};
+  if (opts.chip) {
+    S.awaitWin = false; S.meta.ctx = null;
+    const r = ruleById(opts.chip);
+    if (r) { const out = withFollow(compose({ kind: "rule", rule: r }, text, true), r); out.text = finish(out.text); return out; }
+  }
+  if (CRISIS.test(text)) { S.awaitWin = false; S.meta.ctx = null; return { text: CRISIS_MSG }; }
+  if (S.awaitWin) { S.awaitWin = false; addNote("win", text); return { text: finish(pickReply(ruleById("winsaved"))) }; }
+  const ctx = S.meta.ctx && Date.now() - (S.meta.ctx.at || 0) < 12 * 3600e3 ? S.meta.ctx : null;
+  if (ctx) { const res = handleCtx(ctx, text, opts.quick); if (res) { res.text = finish(res.text); return res; } }
+  S.meta.ctx = null;
+  const m = routeMsg(text);
+  let out = compose(m, text, false);
+  if (m.kind === "rule") out = withFollow(out, m.rule);
+  if (A().promises) {
+    const p = promiseFrom(text);
+    if (p) { out.promiseOffer = { title: p, cat: guessCat(m, text) }; out.text += BR + fill(L().promiseAsk); }
+  }
+  out.text = finish(out.text);
+  return out;
+}
+function previewFor(text) {
+  const m = routeMsg(text);
+  if (m.kind === "crisis") return { name: "Safety message (always on)", text: CRISIS_MSG };
+  let out = compose(m, text, false, true);
+  if (m.kind === "rule") out = withFollow(out, m.rule, true);
+  let name = m.kind === "quality" ? "Quality: " + m.q.name : m.rule.name, t = out.text;
+  if (A().promises && promiseFrom(text)) { t += BR + fill(L().promiseAsk); name += " + promise"; }
+  return { name, text: finish(t).split(BR).join("\n\n") };
+}
+function makePromise(p) {
+  S.tasks.push({ id: uid(), title: p.title, cat: CATS[p.cat] ? p.cat : "life", diff: "medium", repeat: "once", done: false, created: Date.now(), from: "future", promise: true });
+  S.meta.promisesMade = (S.meta.promisesMade || 0) + 1;
+  S.chat.push({ role: "fm", text: finish(fill(L().promiseMade.replace("{p}", () => p.title))), at: Date.now() });
+  save(); renderQuests(); renderChat(); renderTrophies(); toast("Promise added to your quests", "xp");
+}
+
+/* ---------- Future Me texts you: morning and evening check-ins ---------- */
+function slotAt(day, hhmm) { const [h, m] = String(hhmm).split(":").map(Number); const d = new Date(day); d.setHours(h || 0, m || 0, 0, 0); return d.getTime(); }
+function splitBubbles(text) {
+  let p = String(text).split(BR).map(s => s.trim()).filter(Boolean);
+  if (p.length > 5) p = p.slice(0, 4).concat([p.slice(4).join("\n\n")]);
+  return p.length ? p : ["…"];
+}
+function pushBubbles(text, extra, at, kind) {
+  const parts = splitBubbles(finish(text));
+  parts.forEach((p, i) => { const t = { role: "fm", text: p, at: at + i, kind, unread: true }; if (i === parts.length - 1 && extra) Object.assign(t, extra); S.chat.push(t); });
+  return parts.length;
+}
+function deliver() {
+  const now = Date.now(), M = S.meta, a = A();
+  if (!M.welcomed) {
+    M.welcomed = true; M.lastDelivered = now; if (!M.lastSeen) M.lastSeen = now;
+    const n = pushBubbles(welcomeText(), { quick: MOOD_QUICK }, now, "welcome");
+    M.ctx = { awaiting: "mood", at: now };
+    save(); return n;
+  }
+  const from = Math.min(M.lastDelivered || now, now);
+  const slots = [];
+  let d = new Date(from); d.setHours(0, 0, 0, 0);
+  for (let guard = 0; d.getTime() <= now && guard < 400; guard++, d = addDays(d, 1)) {
+    if (a.checkin) slots.push({ kind: "morning", at: slotAt(d, a.checkinTime) });
+    if (a.evening) slots.push({ kind: "evening", at: slotAt(d, a.eveningTime) });
+  }
+  const due = slots.filter(s => s.at > from && s.at <= now).sort((x, y) => x.at - y.at).slice(-2);
+  let n = 0;
+  if (M.lastSeen && now - M.lastSeen > 2 * 864e5 && M.missedFor !== M.lastSeen && due.length) {
+    M.missedFor = M.lastSeen; n += pushBubbles(missedText(), null, due[0].at - 60000, "missed");
+  }
+  for (const s of due) {
+    if (s.kind === "morning") { n += pushBubbles(morningText(), { quick: MOOD_QUICK }, s.at, "checkin"); M.ctx = { awaiting: "mood", at: s.at }; }
+    else { n += pushBubbles(eveningText(), { quick: YESNO }, s.at, "evening"); M.ctx = { awaiting: "yesno", topic: "evening", at: s.at }; }
+  }
+  M.lastDelivered = now;
+  save();
+  return n;
+}
+function markRead() {
+  let changed = false;
+  S.chat.forEach(t => { if (t.unread) { delete t.unread; changed = true; } });
+  S.meta.lastSeen = Date.now();
+  save(); if (changed) renderChat();
+  renderTabBadge();
+}
+function checkInbox() {
+  const n = deliver();
+  if (!n) return;
+  renderChat(); renderTabBadge();
+  if (currentTab() === "future" && document.visibilityState !== "hidden") markRead();
+  else toast("\u{1F4AC} New message from Future " + S.profile.name);
+}
+
+/* ---------- Future Me: chat UI ---------- */
+function md(text) {
+  const out = [];
+  for (const block of esc(text).split(/\n\s*\n/)) {
+    let list = [], para = [];
+    const flushP = () => { if (para.length) { out.push("<p>" + para.join("<br>") + "</p>"); para = []; } };
+    const flushL = () => { if (list.length) { out.push("<ul>" + list.map(li => "<li>" + li + "</li>").join("") + "</ul>"); list = []; } };
+    for (const line of block.split("\n")) {
+      const lm = line.match(/^\s*[-\u2022]\s+(.*)/);
+      if (lm) { flushP(); list.push(lm[1]); } else if (line.trim() && line.trim() !== "\u2063") { flushL(); para.push(line); }
+    }
+    flushP(); flushL();
+  }
+  return out.join("").replace(/\*\*(.+?)\*\*/g, "<strong>$1</strong>");
+}
+const hm = at => new Date(at).toLocaleTimeString("en-GB", { hour: "2-digit", minute: "2-digit" });
+function dayLabel(at) {
+  const k = dayKey(at);
+  if (k === dayKey()) return "Today";
+  if (k === dayKey(addDays(new Date(), -1))) return "Yesterday";
+  return new Date(at).toLocaleDateString("en-GB", { weekday: "short", day: "numeric", month: "short" });
+}
+function offerBtn(act, i, j, done, title, sub) {
+  return '<button class="offer" data-act="' + act + '" data-t="' + i + '"' + (j != null ? ' data-i="' + j + '"' : "") + (done ? " disabled" : "") + '><span class="plus">' + (done ? "\u2713" : "+") + '</span><span class="ot">' + esc(title) + (sub ? "<small>" + esc(sub) + "</small>" : "") + "</span></button>";
+}
+function bubble(turn, i, showQuick) {
+  const tm = turn.at ? '<span class="tm">' + hm(turn.at) + "</span>" : "";
+  if (turn.role === "user") return '<div class="msg me">' + esc(turn.text) + tm + "</div>";
+  let extra = "";
+  if (turn.offers && turn.offers.length) extra += '<div class="offers">' + turn.offers.map((o, j) => offerBtn("offer", i, j, o.added, o.title, (CATS[o.cat] || "Life") + " · +" + (DIFF[o.diff] || DIFF.easy).xp + " XP" + (o.added ? " · Added" : ""))).join("") + "</div>";
+  if (turn.winOffer) extra += '<div class="offers">' + offerBtn("save-win", i, null, turn.winSaved, turn.winSaved ? "Saved to Wins" : "Save as a win", "") + "</div>";
+  if (turn.promiseOffer) extra += '<div class="offers">' + offerBtn("promise", i, null, turn.promiseSaved, turn.promiseSaved ? "Promise made" : "Hold me to it: " + turn.promiseOffer.title, turn.promiseSaved ? turn.promiseOffer.title : "Adds it to your quests as a promise") + "</div>";
+  if (showQuick && turn.quick && turn.quick.length && !turn.answered) extra += '<div class="quick">' + turn.quick.map(q => '<button class="qr" data-act="quick" data-t="' + i + '" data-v="' + esc(q.value) + '">' + esc(q.label) + "</button>").join("") + "</div>";
+  return '<div class="msg fm' + (turn.kind === "checkin" || turn.kind === "evening" ? " checkin" : "") + (turn.unread ? " unread" : "") + '">' + md(turn.text) + extra + tm + "</div>";
+}
+function renderFutureHead() {
+  const p = S.profile;
+  $("#fmAvatar").textContent = (p.name || "C").trim().charAt(0).toUpperCase();
+  $("#fmName").textContent = "Future " + p.name;
+  $("#fmSub").innerHTML = S.typing ? '<span class="typing">typing…</span>' : '<i class="on" aria-hidden="true"></i>online · ' + esc((TONES[C().tone] || TONES.plain).label.toLowerCase()) + " from " + esc(p.year);
+  $("#chatInput").placeholder = "Message Future " + p.name + "…";
+  $("#clearChatBtn").textContent = S.confirmClear ? "Tap again to clear the whole chat" : "Clear chat history";
+  $("#hfTitle").textContent = "Put Future " + p.name + " on your home screen";
+}
+function renderChat() {
+  const p = S.profile, qs = S.brain.qualities, rules = C().rules;
+  let html = '<div class="panel intro"><p class="eyebrow">Who I am in ' + esc(p.year) + '</p><p class="vision">' + esc(p.vision) + "</p>";
+  if (qs.length) html += '<div class="qpills">' + qs.map(q => '<span class="qpill">' + esc(q.name) + "</span>").join("") + "</div>";
+  if (rules.length) html += '<p class="eyebrow">Rules I live by</p><ul class="rules">' + rules.map(x => "<li>" + esc(x) + "</li>").join("") + "</ul>";
+  html += '<p class="fine">I\'m the offline Future Me: I text you check-ins, remember how you\'re feeling, and live out the qualities you give me. Tap Teach to shape me.</p></div>';
+  let lastFm = -1, lastUser = -1;
+  S.chat.forEach((t, i) => { if (t.role === "fm") lastFm = i; else lastUser = i; });
+  let prevDay = "";
+  S.chat.forEach((t, i) => {
+    const dk = t.at ? dayKey(t.at) : prevDay;
+    if (dk && dk !== prevDay) { html += '<div class="dayline">' + esc(dayLabel(t.at)) + "</div>"; prevDay = dk; }
+    html += bubble(t, i, i === lastFm && !S.typing);
+    if (i === lastUser && lastFm > lastUser) html += '<div class="seen">Seen</div>';
+  });
+  if (S.typing) html += '<div class="msg fm"><span class="dots" aria-label="Typing"><i></i><i></i><i></i></span></div>';
+  $("#chatInner").innerHTML = html;
+  const log = $("#chatLog"); requestAnimationFrame(() => { log.scrollTop = log.scrollHeight; });
+}
+function renderTopics() {
+  const live = S.brain.rules.filter(r => r.on !== false && r.chip && r.chip.trim() && r.action !== "system");
+  const mine = live.filter(r => !r.builtin);
+  const built = CHIP_ORDER.map(id => live.find(r => r.builtin && r.id === id)).filter(Boolean);
+  $("#topics").innerHTML = mine.concat(built).map(r => '<button type="button" class="topic" data-act="topic" data-k="' + esc(r.id) + '">' + esc(r.chip) + "</button>").join("") +
+    '<button type="button" class="topic claude" data-act="copy-claude">Copy for Claude</button>';
+}
+const delayFor = (t, fast) => fast ? 120 : Math.min(1800, Math.max(550, 300 + String(t).length * 12));
+function setTyping(on) { S.typing = on; document.body.dataset.typing = on ? "1" : ""; renderFutureHead(); }
+function say(text, opts) {
+  if (S.typing) return;
+  text = String(text).trim(); if (!text) return;
+  S.chat.forEach(t => { if (t.quick) t.answered = true; });
+  S.chat.push({ role: "user", text: text.slice(0, 2000), at: Date.now() });
+  const reply = respond(text, opts);
+  const parts = splitBubbles(reply.text);
+  const fast = matchMedia("(prefers-reduced-motion: reduce)").matches;
+  setTyping(true); save(); renderChat();
+  let i = 0;
+  const step = () => {
+    const turn = { role: "fm", text: parts[i], at: Date.now() };
+    if (i === parts.length - 1) ["offers", "winOffer", "promiseOffer", "quick"].forEach(k => { if (reply[k] != null) turn[k] = reply[k]; });
+    S.chat.push(turn); i++;
+    if (i < parts.length) { save(); renderChat(); setTimeout(step, delayFor(parts[i], fast)); }
+    else { setTyping(false); save(); renderChat(); }
+  };
+  setTimeout(step, delayFor(parts[0], fast));
+}
+function autosize() { const t = $("#chatInput"); t.style.height = "auto"; t.style.height = Math.min(t.scrollHeight, 120) + "px"; }
+$("#chatInput").addEventListener("input", autosize);
+$("#chatInput").addEventListener("keydown", e => { if (e.key === "Enter" && !e.shiftKey && !e.isComposing) { e.preventDefault(); $("#chatForm").requestSubmit(); } });
+$("#chatForm").addEventListener("submit", e => { e.preventDefault(); const v = $("#chatInput").value; if (!v.trim() || S.typing) return; $("#chatInput").value = ""; autosize(); say(v); });
+
+function claudePrompt() {
+  const p = S.profile, s = stats(), Lv = levelInfo(s.xp), c = C(), tone = TONES[c.tone] || TONES.plain, a = A();
+  const open = S.tasks.filter(t => t.repeat !== "daily" && !t.done).map(t => "- " + t.title + (t.promise ? " (a promise I made)" : ""));
+  const habits = S.tasks.filter(t => t.repeat === "daily").map(t => "- " + t.title + (doneToday(t.id) ? " (done today)" : ""));
+  const draft = $("#chatInput").value.trim();
+  const lastUser = [...S.chat].reverse().find(t => t.role === "user");
+  const question = draft || (lastUser ? lastUser.text : "What should I focus on this week?");
+  const mood = S.meta.moods[dayKey()];
+  const lines = [
+    "Please talk to me as Future " + p.name + ": me in " + p.year + ", who has already become the person below. I'm in the UK.",
+    "Talk like a close friend texting me: casual, warm, honest, short messages, and ask me something back.",
+    "", "Who I am in " + p.year + ":", p.vision
+  ];
+  if (S.brain.qualities.length) lines.push("", "My future self's qualities. Show them in how you talk and in the advice you give:", S.brain.qualities.map(q => "- " + q.name + (q.how ? ": " + q.how : "")).join("\n"));
+  lines.push("", "Where I am now:", p.now, "", "Personality: " + S.brain.style, "Tone: " + tone.label + " (" + tone.desc + "). Call me: " + (c.calls || p.name) + ".");
+  if (c.catchphrases.length) lines.push("Catchphrases you use now and then: " + c.catchphrases.join(" / "));
+  if (c.rules.length) lines.push("Rules you live by: " + c.rules.join(" / "));
+  if (c.never) lines.push("Never say: " + c.never + ".");
+  lines.push(c.emoji ? "Use a few emojis." : "Don't use emojis.");
+  lines.push("Accountability: hold me to my word at a " + a.level + " level. Ask about unfinished promises and quests I've been avoiding.");
+  lines.push("", "My progress: Level " + Lv.n + " (" + Lv.rank + "), " + s.xp + " XP, " + s.cur + "-day streak, " + s.promisesKept + " promises kept." + (mood ? " Today I said my mood is " + mood + "/5." : ""), "Daily habits:", habits.join("\n") || "- none", "Open quests:", open.slice(0, 15).join("\n") || "- none", "", "My message: " + question);
+  return lines.join("\n");
+}
+async function copyText(text, okMsg) {
+  try { await navigator.clipboard.writeText(text); toast(okMsg); return true; } catch (e) { return false; }
+}
+function showCopySheet(title, intro, text) {
+  $("#cpTitle").textContent = title; $("#cpIntro").textContent = intro; $("#cpText").value = text;
+  openSheet("#sheetCopy");
+  setTimeout(() => { $("#cpText").focus(); $("#cpText").select(); }, 80);
+}
+$("#cpCopy").addEventListener("click", async () => {
+  const ok = await copyText($("#cpText").value, "Copied");
+  if (!ok) { $("#cpText").focus(); $("#cpText").select(); toast("Press and hold the text, then tap Copy."); }
+});
+
+/* ---------- Check-in times and phone reminders ---------- */
+function gcalLink(kind) {
+  const a = A(), p = S.profile, t = kind === "morning" ? a.checkinTime : a.eveningTime;
+  const now = new Date(), start = new Date(slotAt(now, t));
+  if (start <= now) start.setDate(start.getDate() + 1);
+  const end = new Date(start.getTime() + 10 * 60000);
+  const f = d => d.getFullYear() + pad(d.getMonth() + 1) + pad(d.getDate()) + "T" + pad(d.getHours()) + pad(d.getMinutes()) + "00";
+  let tz = "Europe/London"; try { tz = Intl.DateTimeFormat().resolvedOptions().timeZone || tz; } catch (e) {}
+  const title = kind === "morning" ? "\u2600\uFE0F Future " + p.name + ": morning check-in" : "\u{1F319} Future " + p.name + ": how did today go?";
+  const details = (kind === "morning" ? "Morning! It's me. How are you feeling today, and what's the first thing you'll do?" : "Hey, it's me. Come and tell me how today went before you sleep.") + "\n\nOpen Future " + p.name + ": " + APP_URL;
+  return "https://calendar.google.com/calendar/render?action=TEMPLATE&text=" + encodeURIComponent(title) + "&dates=" + f(start) + "/" + f(end) +
+    "&ctz=" + encodeURIComponent(tz) + "&recur=" + encodeURIComponent("RRULE:FREQ=DAILY") + "&details=" + encodeURIComponent(details);
+}
+function renderRemind() {
+  const a = A();
+  $("#rMorningOn").checked = !!a.checkin; $("#rMorning").value = a.checkinTime;
+  $("#rEveningOn").checked = !!a.evening; $("#rEvening").value = a.eveningTime;
+  $("#rMorning").disabled = !a.checkin; $("#rEvening").disabled = !a.evening;
+  $("#gcalMorning").href = gcalLink("morning"); $("#gcalEvening").href = gcalLink("evening");
+  $("#gcalMorning").hidden = !a.checkin; $("#gcalEvening").hidden = !a.evening;
+  $("#appLink").textContent = APP_URL;
+}
+function openRemind() { renderRemind(); openSheet("#sheetRemind"); }
+$("#remindBtn").addEventListener("click", openRemind);
+["#rMorningOn", "#rMorning", "#rEveningOn", "#rEvening"].forEach(sel => $(sel).addEventListener("change", () => {
+  const a = A();
+  a.checkin = $("#rMorningOn").checked; a.evening = $("#rEveningOn").checked;
+  if (/^\d\d:\d\d$/.test($("#rMorning").value)) a.checkinTime = $("#rMorning").value;
+  if (/^\d\d:\d\d$/.test($("#rEvening").value)) a.eveningTime = $("#rEvening").value;
+  save(); renderRemind(); toast("Check-in times saved");
+}));
+$("#copyLink").addEventListener("click", async () => {
+  const ok = await copyText(APP_URL, "App link copied");
+  if (!ok) showCopySheet("App link", "Copy this link and paste it into your reminder.", APP_URL);
+});
+
+/* ---------- Teach screen ---------- */
+let editingId = null, delArmed = false, editingQ = null, qDelArmed = false;
+function renderTeach() {
+  const c = C(), a = A();
+  $("#tYear").textContent = S.profile.year;
+  $("#qList").innerHTML = S.brain.qualities.length ? S.brain.qualities.map(q =>
+    '<button type="button" class="rowbtn" data-act="edit-quality" data-id="' + esc(q.id) + '"><span class="rt">' + esc(q.name) + '</span><span class="rs">' + esc(q.how || "Tap to describe how Future Me shows it") + "</span></button>").join("")
+    : '<div class="rowbtn" style="cursor:default"><span class="rs">No qualities yet. Add some below.</span></div>';
+  const have = new Set(S.brain.qualities.map(q => q.name.toLowerCase()));
+  const picks = QUALITY_LIBRARY.map((q, i) => [q, i]).filter(([q]) => !have.has(q.name.toLowerCase()));
+  $("#qPicks").innerHTML = picks.length ? picks.map(([q, i]) => '<button type="button" class="pick" data-act="pick-quality" data-i="' + i + '">+ ' + esc(q.name) + "</button>").join("") : '<span class="hint">You have them all. Add your own with + Add a quality.</span>';
+  const lv = $("#al-" + a.level); if (lv) lv.checked = true;
+  $("#aPromises").checked = !!a.promises; $("#aStale").checked = !!a.stale; $("#aNudge").checked = !!a.nudge;
+  $("#cTones").innerHTML = Object.keys(TONES).map(k => '<label class="tone"><input type="radio" name="ctone" id="ct-' + k + '" value="' + k + '"' + (c.tone === k ? " checked" : "") + "><b>" + esc(TONES[k].label) + "</b><small>" + esc(TONES[k].desc) + "</small></label>").join("");
+  $("#cCalls").value = c.calls; $("#tStyle").value = S.brain.style; $("#cCatch").value = c.catchphrases.join("\n"); $("#cRules").value = c.rules.join("\n"); $("#cNever").value = c.never;
+  const f = $("#cf-" + c.catchFreq); if (f) f.checked = true;
+  $("#cNext").checked = !!c.remindNext; $("#cStreak").checked = !!c.streak; $("#cEmoji").checked = !!c.emoji; $("#tSignoff").value = S.brain.signoff;
+  S.confirmClear = false; renderFutureHead();
+  renderLessons();
+}
+function renderLessons() {
+  $("#tList").innerHTML = S.brain.rules.map(r => {
+    const when = r.action === "system" ? (r.id === "fallback" ? "Used when nothing else matches" : "Used after you share a win")
+      : r.words ? "When you say: " + r.words : "Button only";
+    const n = (r.replies || []).length;
+    return '<button type="button" class="rowbtn' + (r.on === false ? " off" : "") + '" data-act="edit-lesson" data-id="' + esc(r.id) + '">' +
+      '<span class="rt">' + esc(r.name) + (r.builtin ? ' <span class="tag">Built-in</span>' : ' <span class="tag mine">Yours</span>') +
+      (r.chip && r.action !== "system" ? ' <span class="tag">Button</span>' : "") + (r.on === false ? ' <span class="tag">Off</span>' : "") + "</span>" +
+      '<span class="rs">' + esc(when) + '</span><span class="rc">' + n + (n === 1 ? " reply" : " replies") + "</span></button>";
+  }).join("");
+}
+$("#teachBtn").addEventListener("click", () => { renderTeach(); $("#tTest").value = ""; $("#tTestOut").hidden = true; openSheet("#sheetTeach"); });
+$("#tVision").addEventListener("click", () => { $("#sheetTeach").hidden = true; openVision(); });
+$("#tRemind").addEventListener("click", () => { $("#sheetTeach").hidden = true; openRemind(); });
+function runTest() {
+  const v = $("#tTest").value.trim(); if (!v) { $("#tTest").focus(); return; }
+  const p = previewFor(v);
+  $("#tTestOut").hidden = false;
+  $("#tTestOut").innerHTML = '<b class="lbl2">Answered by: ' + esc(p.name) + "</b>" + md(p.text);
+}
+$("#tTestBtn").addEventListener("click", runTest);
+$("#tTest").addEventListener("keydown", e => { if (e.key === "Enter") { e.preventDefault(); runTest(); } });
+
+/* qualities */
+function openQuality(id) {
+  const q = id ? S.brain.qualities.find(x => x.id === id) : null;
+  editingQ = q ? q.id : null; qDelArmed = false;
+  $("#qlTitle").textContent = q ? "Edit quality" : "New quality";
+  $("#qlName").value = q ? q.name : ""; $("#qlHow").value = q ? q.how : ""; $("#qlWords").value = q ? q.words : ""; $("#qlAction").value = q ? q.action : "";
+  const r = $("#qlc-" + (q && CATS[q.cat] ? q.cat : "life")); if (r) r.checked = true;
+  $("#qlDel").hidden = !q; $("#qlDel").textContent = "Delete"; $("#qlDel").classList.remove("danger");
+  openSheet("#sheetQuality");
+  setTimeout(() => (q ? $("#qlHow") : $("#qlName")).focus(), 60);
+}
+$("#qNew").addEventListener("click", () => openQuality(null));
+$("#qualityForm").addEventListener("submit", e => {
+  e.preventDefault();
+  const name = $("#qlName").value.trim().slice(0, 40);
+  if (!name) { toast("Give the quality a name."); $("#qlName").focus(); return; }
+  if (S.brain.qualities.find(x => x.name.toLowerCase() === name.toLowerCase() && x.id !== editingQ)) { toast("Future Me already has that quality."); return; }
+  const data = { name, how: $("#qlHow").value.trim().slice(0, 600), words: $("#qlWords").value.split(",").map(w => w.trim()).filter(Boolean).join(", ").slice(0, 400),
+    action: $("#qlAction").value.trim().slice(0, 90), cat: ($("input[name=qlcat]:checked") || {}).value || "life" };
+  const q = editingQ ? S.brain.qualities.find(x => x.id === editingQ) : null;
+  if (q) Object.assign(q, data); else S.brain.qualities.push(Object.assign({ id: "q-" + uid() }, data));
+  save(); $("#sheetQuality").hidden = true; renderTeach(); renderChat(); renderTrophies();
+  toast(q ? "Quality updated" : "Future Me is now " + lowerFirst(name), "xp");
+});
+$("#qlDel").addEventListener("click", () => {
+  if (!editingQ) return;
+  if (!qDelArmed) { qDelArmed = true; $("#qlDel").textContent = "Tap again to delete"; $("#qlDel").classList.add("danger"); return; }
+  S.brain.qualities = S.brain.qualities.filter(x => x.id !== editingQ);
+  save(); $("#sheetQuality").hidden = true; renderTeach(); renderChat(); renderTrophies(); toast("Quality removed");
+});
+
+/* accountability (saves on change) */
+function saveAccount() {
+  const a = A();
+  a.level = ($("input[name=alevel]:checked") || {}).value || a.level;
+  a.promises = $("#aPromises").checked; a.stale = $("#aStale").checked; a.nudge = $("#aNudge").checked;
+  save(); toast("Saved");
+  if ($("#tTest").value.trim()) runTest();
+}
+$$("input[name=alevel], #aPromises, #aStale, #aNudge").forEach(el => el.addEventListener("change", saveAccount));
+
+/* voice */
+const lines = v => v.split("\n").map(x => x.trim()).filter(Boolean).slice(0, 30).map(x => x.slice(0, 200));
+$("#tSaveVoice").addEventListener("click", () => {
+  const c = C();
+  c.tone = ($("input[name=ctone]:checked") || {}).value || c.tone;
+  c.calls = $("#cCalls").value.split(",").map(x => x.trim()).filter(Boolean).join(", ").slice(0, 120);
+  S.brain.style = $("#tStyle").value.trim().slice(0, 1500) || DEFAULT_STYLE;
+  c.catchphrases = lines($("#cCatch").value);
+  c.catchFreq = ($("input[name=cfreq]:checked") || {}).value || "some";
+  c.rules = lines($("#cRules").value);
+  c.never = $("#cNever").value.split(",").map(x => x.trim()).filter(Boolean).join(", ").slice(0, 300);
+  c.remindNext = $("#cNext").checked; c.streak = $("#cStreak").checked; c.emoji = $("#cEmoji").checked;
+  S.brain.signoff = $("#tSignoff").value.trim().slice(0, 160);
+  save(); renderFutureHead(); renderChat(); toast("Voice saved", "xp");
+  if ($("#tTest").value.trim()) runTest();
+});
+
+/* lessons */
+function openLesson(id) {
+  const r = id ? ruleById(id) : null;
+  editingId = r ? r.id : null; delArmed = false;
+  $("#lfTitle").textContent = r ? "Edit lesson" : "New lesson";
+  $("#lName").value = r ? r.name : ""; $("#lWords").value = r ? r.words : "";
+  $("#lReplies").value = r ? (r.replies || []).map(x => String(x).split(BR).join("\n")).join("\n\n") : ""; $("#lChip").value = r ? (r.chip || "") : "";
+  $("#lOn").checked = r ? r.on !== false : true;
+  const sys = !!(r && r.action === "system"), chipOnly = !!(r && r.action === "askwin");
+  $("#lWordsRow").hidden = sys || chipOnly; $("#lChipRow").hidden = sys; $("#lOnRow").hidden = sys;
+  $("#lDel").hidden = !r; $("#lDel").textContent = r && r.builtin ? "Reset to original" : "Delete"; $("#lDel").classList.remove("danger");
+  openSheet("#sheetLesson");
+  setTimeout(() => (r ? $("#lReplies") : $("#lName")).focus(), 60);
+}
+$("#tNew").addEventListener("click", () => openLesson(null));
+$("#lessonForm").addEventListener("submit", e => {
+  e.preventDefault();
+  const r = editingId ? ruleById(editingId) : null;
+  const replies = $("#lReplies").value.split(/\n\s*\n/).map(s => s.trim()).filter(Boolean).slice(0, 40).map(s => s.slice(0, 1500).split("\n").join(BR));
+  const name = $("#lName").value.trim().slice(0, 60);
+  const words = $("#lWords").value.split(",").map(w => w.trim()).filter(Boolean).join(", ").slice(0, 800);
+  const chip = $("#lChip").value.trim().slice(0, 40);
+  if (!replies.length) { toast("Write at least one reply."); $("#lReplies").focus(); return; }
+  const needsTrigger = !r || (r.action !== "system" && r.action !== "askwin");
+  if (needsTrigger && !words && !chip) { toast("Add some words or a button, or I'll never use this lesson."); $("#lWords").focus(); return; }
+  if (r) {
+    r.name = name || r.name; r.replies = replies;
+    if (!$("#lWordsRow").hidden) r.words = words;
+    if (!$("#lChipRow").hidden) r.chip = chip;
+    if (!$("#lOnRow").hidden) r.on = $("#lOn").checked;
+  } else {
+    S.brain.rules.unshift({ id: "my-" + uid(), name: name || words.split(",")[0] || chip || "My lesson", words, replies, chip, on: $("#lOn").checked, builtin: false, action: "" });
+  }
+  save(); $("#sheetLesson").hidden = true; renderLessons(); renderTopics(); toast(r ? "Lesson updated" : "Lesson learned", "xp");
+});
+$("#lDel").addEventListener("click", () => {
+  const r = ruleById(editingId); if (!r) return;
+  if (!delArmed) { delArmed = true; $("#lDel").textContent = r.builtin ? "Tap again to reset" : "Tap again to delete"; $("#lDel").classList.add("danger"); return; }
+  if (r.builtin) { const d = DEFAULT_RULES.find(x => x.id === r.id); if (d) Object.assign(r, cloneRule(d)); toast("Reset to original"); }
+  else { S.brain.rules = S.brain.rules.filter(x => x.id !== r.id); toast("Lesson deleted"); }
+  save(); $("#sheetLesson").hidden = true; renderLessons(); renderTopics();
+});
+$("#clearChatBtn").addEventListener("click", () => {
+  if (!S.confirmClear) { S.confirmClear = true; renderFutureHead(); setTimeout(() => { S.confirmClear = false; renderFutureHead(); }, 4000); return; }
+  S.confirmClear = false; S.chat = []; S.awaitWin = false; S.meta.ctx = null; save(); renderChat(); renderFutureHead(); renderTabBadge(); toast("Chat cleared");
+});
+
+/* ---------- vision ---------- */
+function openVision() {
+  const p = S.profile;
+  $("#vName").value = p.name; $("#vYear").value = p.year; $("#vVision").value = p.vision; $("#vNow").value = p.now;
+  openSheet("#sheetVision");
+}
+$("#visionForm").addEventListener("submit", e => {
+  e.preventDefault();
+  const year = parseInt($("#vYear").value, 10);
+  S.profile = {
+    name: $("#vName").value.trim().slice(0, 40) || DEFAULT_PROFILE.name,
+    year: year >= 2027 && year <= 2060 ? year : DEFAULT_PROFILE.year,
+    vision: $("#vVision").value.trim() || DEFAULT_PROFILE.vision,
+    now: $("#vNow").value.trim() || DEFAULT_PROFILE.now
+  };
+  $("#sheetVision").hidden = true; save(); render(); toast("Vision saved");
+});
+
+/* ---------- one click handler for everything ---------- */
+document.addEventListener("click", async e => {
+  const b = e.target.closest("[data-act]"); if (!b) return;
+  const act = b.dataset.act, id = b.dataset.id;
+  if (act === "toggle") toggleTask(id);
+  else if (act === "ask-del") { S.confirmDel = b.dataset.key; renderQuests(); renderNotes(); }
+  else if (act === "cancel-del") { S.confirmDel = null; renderQuests(); renderNotes(); }
+  else if (act === "del-task") { S.confirmDel = null; S.tasks = S.tasks.filter(t => t.id !== id); save(); render(); toast("Quest deleted. Your XP stays."); }
+  else if (act === "del-note") { S.confirmDel = null; S.notes = S.notes.filter(n => n.id !== id); save(); render(); toast("Deleted"); }
+  else if (act === "pin") { const n = S.notes.find(x => x.id === id); if (n) { n.pinned = !n.pinned; save(); renderNotes(); } }
+  else if (act === "filter") { S.noteFilter = b.dataset.k; renderNotes(); }
+  else if (act === "book") { if (S.book !== b.dataset.b) { S.book = b.dataset.b === "b" ? "b" : "a"; S.noteFilter = "all"; S.confirmDel = null; renderNotes(); } }
+  else if (act === "topic") { const r = ruleById(b.dataset.k); if (r) say(r.chip, { chip: r.id }); }
+  else if (act === "quick") {
+    const turn = S.chat[+b.dataset.t]; if (!turn || turn.answered || S.typing) return;
+    const q = (turn.quick || []).find(x => x.value === b.dataset.v); if (!q) return;
+    say(q.label, { quick: q.value });
+  }
+  else if (act === "edit-lesson") openLesson(id);
+  else if (act === "edit-quality") openQuality(id);
+  else if (act === "pick-quality") {
+    const lib = QUALITY_LIBRARY[+b.dataset.i];
+    if (lib && !S.brain.qualities.some(q => q.name.toLowerCase() === lib.name.toLowerCase())) {
+      S.brain.qualities.push(makeQuality(lib)); save(); renderTeach(); renderChat(); renderTrophies();
+      toast("Future Me is now " + lowerFirst(lib.name), "xp");
+    }
+  }
+  else if (act === "offer") {
+    const turn = S.chat[+b.dataset.t], o = turn && turn.offers && turn.offers[+b.dataset.i];
+    if (o && !o.added) { o.added = true; addQuest(o.title, o.cat, o.diff, "once", "future"); save(); renderChat(); toast("Quest added"); }
+  }
+  else if (act === "save-win") {
+    const turn = S.chat[+b.dataset.t];
+    if (turn && turn.winOffer && !turn.winSaved) { turn.winSaved = true; addNote("win", turn.winOffer); save(); renderChat(); toast("Saved to Wins", "xp"); }
+  }
+  else if (act === "promise") {
+    const turn = S.chat[+b.dataset.t];
+    if (turn && turn.promiseOffer && !turn.promiseSaved) { turn.promiseSaved = true; makePromise(turn.promiseOffer); }
+  }
+  else if (act === "copy-claude") {
+    const text = claudePrompt();
+    const ok = await copyText(text, "Copied. Paste it into Claude for a full answer.");
+    if (!ok) showCopySheet("Copy for Claude", "Copy this, then paste it into Claude for a full answer.", text);
+  }
+});
+
+/* ---------- backup / restore ---------- */
+$("#backupBtn").addEventListener("click", () => {
+  const data = JSON.stringify({ app: "future-chris", v: 1, saved: new Date().toISOString(), profile: S.profile, tasks: S.tasks, done: S.done, notes: S.notes, books: S.books, chat: S.chat.slice(-120), brain: S.brain, meta: S.meta });
+  showCopySheet("Back up", "Copy this and keep it somewhere safe, like an email to yourself or your phone's Notes app.", data);
+});
+let restoreArmed = false;
+function resetRestore() { restoreArmed = false; $("#rsGo").textContent = "Restore"; $("#rsGo").classList.remove("danger"); }
+$("#restoreBtn").addEventListener("click", () => { $("#rsText").value = ""; resetRestore(); openSheet("#sheetRestore"); });
+$("#rsText").addEventListener("input", resetRestore);
+$("#rsGo").addEventListener("click", () => {
+  let d;
+  try { d = JSON.parse($("#rsText").value.trim()); } catch (e) { d = null; }
+  if (!d || d.app !== "future-chris" || !Array.isArray(d.tasks) || !Array.isArray(d.done) || !Array.isArray(d.notes)) {
+    toast("That doesn't look like a Future Chris backup. Paste the whole thing."); return;
+  }
+  if (!restoreArmed) { restoreArmed = true; $("#rsGo").textContent = "Yes, replace everything"; $("#rsGo").classList.add("danger"); return; }
+  S.tasks = d.tasks; S.done = d.done; S.notes = d.notes; S.chat = Array.isArray(d.chat) ? d.chat : [];
+  S.profile = d.profile; S.brain = d.brain; S.meta = d.meta; S.books = d.books; S.book = "a";
+  normalize(); save(); render(); $("#sheetRestore").hidden = true; resetRestore(); toast("Backup restored");
+});
+$("#helpBtn").addEventListener("click", () => openSheet("#sheetHelp"));
+$("#helpBtn2").addEventListener("click", () => openSheet("#sheetHelp"));
+
+/* ---------- routing ---------- */
+const TABS = { quests: "Quests", future: "Future Me", notes: "Notes", trophies: "Trophies" };
+function route() {
+  const tab = currentTab();
+  for (const k of Object.keys(TABS)) $("#view-" + k).hidden = k !== tab;
+  $$(".tab").forEach(b => { if (b.dataset.tab === tab) b.setAttribute("aria-current", "page"); else b.removeAttribute("aria-current"); });
+  $("#viewTitle").textContent = TABS[tab];
+  if (tab === "future") { checkInbox(); renderChat(); markRead(); }
+}
+$$(".tab").forEach(b => b.addEventListener("click", () => { try { location.hash = b.dataset.tab; } catch (e) {} route(); }));
+window.addEventListener("hashchange", route);
+document.addEventListener("visibilitychange", () => { if (document.visibilityState === "visible") { renderHeader(); checkInbox(); } });
+setInterval(() => { if (document.visibilityState !== "hidden") checkInbox(); }, 30000);
+
+document.body.dataset.typing = "";
+deliver();
+render(); renderBanner(); route();
+})();
+</script>
+<script>
+if ("serviceWorker" in navigator && (location.protocol === "https:" || location.hostname === "localhost")) {
+  addEventListener("load", () => { navigator.serviceWorker.register("sw.js").catch(() => {}); });
+}
+</script>
+</body>
+</html>
