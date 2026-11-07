@@ -183,6 +183,8 @@ details.done-list .list{margin-top:8px}
 .dots i:nth-child(2){animation-delay:.2s}.dots i:nth-child(3){animation-delay:.4s}
 @keyframes blink{0%,80%,100%{opacity:.25}40%{opacity:1}}
 .intro{padding:16px;display:flex;flex-direction:column;gap:10px}
+.introtop{display:flex;align-items:baseline;justify-content:space-between;gap:8px;flex-wrap:wrap}
+.countdown{font-size:12.5px;color:var(--xp);font-variant-numeric:tabular-nums}
 .intro .vision{font-family:var(--f-display);font-size:19px;line-height:1.35}
 .intro .fine{font-size:12.5px;color:var(--muted)}
 .intro .rules{margin:0;padding-left:18px;display:flex;flex-direction:column;gap:2px}
@@ -644,7 +646,7 @@ a.btn{text-decoration:none}
     <h2 id="lfTitle">New lesson</h2>
     <div class="row"><label class="lbl" for="lName">Lesson name</label><input class="field" id="lName" maxlength="60" placeholder="e.g. Gym motivation" autocomplete="off"></div>
     <div class="row" id="lWordsRow"><label class="lbl" for="lWords">When I say any of these</label><input class="field" id="lWords" placeholder="gym, workout, training" autocomplete="off"><p class="hint">Words or short phrases, separated by commas. Endings like -s, -ed and -ing match too.</p></div>
-    <div class="row"><label class="lbl" for="lReplies">Future Me replies</label><textarea class="field" id="lReplies" rows="8" placeholder="Write a reply here.&#10;&#10;Leave a blank line, then write another. I'll pick one at random each time."></textarea><p class="hint">Fill-ins: {you} (what I call you) {name} {next} (your next quest) {streak} {level} {rank} {quote}. Put **double stars** around words to make them bold.</p></div>
+    <div class="row"><label class="lbl" for="lReplies">Future Me replies</label><textarea class="field" id="lReplies" rows="8" placeholder="Write a reply here.&#10;&#10;Leave a blank line, then write another. I'll pick one at random each time."></textarea><p class="hint">Fill-ins: {you} (what I call you) {name} {date} (your Future Me date) {days} (days to go) {next} (your next quest) {streak} {level} {rank} {quote}. Put **double stars** around words to make them bold.</p></div>
     <div class="row" id="lChipRow"><label class="lbl" for="lChip">Quick button (optional)</label><input class="field" id="lChip" maxlength="40" placeholder="e.g. Gym" autocomplete="off"><p class="hint">Adds a button above the chat box that runs this lesson.</p></div>
     <label class="switch" id="lOnRow"><input type="checkbox" id="lOn" checked> <span>Lesson is on</span></label>
     <div class="actions"><button type="button" class="btn ghost" id="lDel">Delete</button><button type="submit" class="btn">Save lesson</button></div>
@@ -654,12 +656,12 @@ a.btn{text-decoration:none}
 
 <!-- Vision sheet -->
 <div class="scrim" id="sheetVision" hidden>
-  <form class="sheet" id="visionForm" role="dialog" aria-modal="true" aria-labelledby="vfTitle">
+  <form class="sheet" id="visionForm" novalidate role="dialog" aria-modal="true" aria-labelledby="vfTitle">
     <div class="grab"></div>
     <h2 id="vfTitle">Your vision</h2>
     <p class="muted">This shows at the top of every chat. Read it often. It's the person you're building.</p>
     <div class="row"><label class="lbl" for="vName">Your first name</label><input class="field" id="vName" maxlength="40"></div>
-    <div class="row"><label class="lbl" for="vYear">Future Me is from the year</label><input class="field num" id="vYear" type="number" min="2027" max="2060" inputmode="numeric"></div>
+    <div class="row"><label class="lbl" for="vDate">Future Me is from</label><input class="field" id="vDate" type="date"><p class="hint">Pick the exact day you want to become this person. Future Me counts down to it.</p></div>
     <div class="row"><label class="lbl" for="vVision">The person I'm becoming</label><textarea class="field" id="vVision" rows="6"></textarea></div>
     <div class="row"><label class="lbl" for="vNow">Where I am now</label><textarea class="field" id="vNow" rows="5"></textarea></div>
     <div class="actions"><button type="button" class="btn ghost" data-close>Cancel</button><button type="submit" class="btn">Save</button></div>
@@ -756,6 +758,7 @@ function levelInfo(xp) {
 const DEFAULT_PROFILE = {
   name: "Chris",
   year: 2031,
+  date: "2031-01-01",
   vision: "It's 2031. I'm the CEO of my own physical business, with a team I trust, built on what I learned in banking and in care. My online income from YouTube, Instagram, Substack and digital products keeps coming in even while I sleep. I can code and build websites and apps myself, and I use AI tools to work smarter. I have savings, investments and no bad debt, and I have time for the people I love and for my health.",
   now: "I rose to manager in banking before relocating to the UK, and I've worked across care and the NHS. Right now I work shifts while I build towards my own business and online income."
 };
@@ -814,7 +817,7 @@ const QUEST_BANK = [
 const DEFAULT_RULES = [
   { id: "whoami", name: "Who are you?", chip: "Who are you?", action: "whoami",
     words: "who are you, tell me about yourself, tell me about you, what are you like, describe yourself, your qualities, what kind of person",
-    replies: ["I'm you, {you}, in {year} 😄 This is who I've become:", "Here's who you're becoming, {you}. I know, because I'm already there:"] },
+    replies: ["I'm you, {you}, from {date} 😄 This is who I've become:", "Here's who you're becoming, {you}. I know, because I'm already there, on {date}:"] },
   { id: "review", name: "Review my day", chip: "Review my day", action: "review",
     words: "review my day, how did i do, how am i doing, check on me, hold me accountable, accountability, my progress",
     replies: ["Okay, honest review time, {you}.", "Let's look at your day properly, {you}."] },
@@ -842,7 +845,7 @@ const DEFAULT_RULES = [
   { id: "giveup", name: "Feeling like giving up", chip: "I feel like giving up",
     words: "give up, giving up, quit, can't do, pointless, failing, failure, behind, stuck, overwhelm, stress, hopeless, useless, not good enough, doubt",
     replies: [
-      "Listen. I've been exactly where you are, and I didn't quit. That's the only reason I'm talking to you from {year}.",
+      "Listen. I've been exactly where you are, and I didn't quit. That's the only reason I'm talking to you from {date}.",
       "Feeling behind is normal. You rose to manager in banking, then started again in a new country, and you kept going. That person doesn't give up because of a slow week.",
       "Remember why you started. {quote}"
     ] },
@@ -1104,6 +1107,8 @@ function ensureBrain() {
 function normalize() {
   ["tasks", "done", "notes", "chat"].forEach(k => { if (!Array.isArray(S[k])) S[k] = []; });
   S.profile = Object.assign(clone(DEFAULT_PROFILE), S.profile || {});
+  if (!/^\d{4}-\d\d-\d\d$/.test(S.profile.date || "") || (S.profile.year && +S.profile.date.slice(0, 4) !== +S.profile.year && !S.profile.dateSet)) S.profile.date = (+S.profile.year || 2031) + "-01-01";
+  S.profile.year = +S.profile.date.slice(0, 4);
   S.books = Object.assign({ a: "Notes", b: "Journal" }, S.books || {});
   ["a", "b"].forEach(k => { if (typeof S.books[k] !== "string" || !S.books[k].trim()) S.books[k] = k === "a" ? "Notes" : "Journal"; });
   S.notes.forEach(n => { if (n.book !== "b") n.book = "a"; });
@@ -1436,10 +1441,15 @@ function quoteLine() {
 }
 function fill(s) {
   const st = stats(), Lv = levelInfo(st.xp), p = S.profile;
-  return String(s).replace(/\{you\}/g, () => youName()).replace(/\{name\}/g, () => p.name).replace(/\{year\}/g, () => p.year)
+  return String(s).replace(/\{you\}/g, () => youName()).replace(/\{name\}/g, () => p.name).replace(/\{year\}/g, () => p.year).replace(/\{date\}/g, () => dateLong()).replace(/\{days\}/g, () => fmt(Math.max(0, daysToGo())))
     .replace(/\{level\}/g, () => Lv.n).replace(/\{rank\}/g, () => Lv.rank).replace(/\{streak\}/g, () => st.cur)
     .replace(/\{next\}/g, () => nextStep()).replace(/\{quote\}/g, () => quoteLine());
 }
+const futureDay = () => parseDay(S.profile.date);
+const dateLong = () => futureDay().toLocaleDateString("en-GB", { day: "numeric", month: "long", year: "numeric" });
+const dateShort = () => futureDay().toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric" });
+function daysToGo() { const t = new Date(); t.setHours(0, 0, 0, 0); return Math.round((futureDay() - t) / 864e5); }
+function countdownText() { const d = daysToGo(); return d > 1 ? fmt(d) + " days to go" : d === 1 ? "1 day to go" : d === 0 ? "It's the day!" : "We made it"; }
 const fillQ = (tpl, q) => fill(String(tpl).replace(/\{q\}/g, () => lowerFirst(q.name)).replace(/\{how\}/g, () => endStop(q.how))).replace(/\s+$/, "");
 const emo = s => C().emoji ? s : s.replace(/\s*[\u{1F300}-\u{1FAFF}\u2600-\u27BF\u2B50\u2763\u{1F004}]\uFE0F?/gu, "");
 function finish(text) { const so = S.brain.signoff.trim(); return so ? text + "\n\n" + fill(so) : text; }
@@ -1478,8 +1488,8 @@ function pickReply(r, q) {
 }
 function whoamiText(r) {
   const qs = S.brain.qualities;
-  if (!qs.length) return fill("I'm you, {you}, in {year} 😄" + BR + "You haven't given me my qualities yet though. Tap Teach and add the qualities you're growing into, and I'll live them out every time we talk.");
-  return fill(pickFrom(r.replies, r.id) || "I'm you, {you}, in {year}.") + "\n" +
+  if (!qs.length) return fill("I'm you, {you}, from {date} 😄" + BR + "You haven't given me my qualities yet though. Tap Teach and add the qualities you're growing into, and I'll live them out every time we talk.");
+  return fill(pickFrom(r.replies, r.id) || "I'm you, {you}, from {date}.") + "\n" +
     qs.map(q => "- **" + q.name + "**" + (q.how ? ": " + firstSentence(q.how) : "")).join("\n") +
     BR + fill("Which one do you want to work on today, {you}?");
 }
@@ -1515,7 +1525,7 @@ function staleQuests() {
 }
 function welcomeText() {
   return fill("Hey {you}! 👋") + BR +
-    fill("It's me. Well… you, from {year} 😄 The version of you who made it.") + BR +
+    fill("It's me. Well… you, from {date} 😄 The version of you who made it.") + (daysToGo() > 0 ? " Only " + fmt(daysToGo()) + " days until we meet." : "") + BR +
     "I'll check in on you every morning and evening, like a friend would. Tap the bell at the top to change the times, or to get reminders on your phone." + BR +
     "So tell me, how are you feeling today?";
 }
@@ -1788,14 +1798,14 @@ function renderFutureHead() {
   const p = S.profile;
   $("#fmAvatar").textContent = (p.name || "C").trim().charAt(0).toUpperCase();
   $("#fmName").textContent = "Future " + p.name;
-  $("#fmSub").innerHTML = S.typing ? '<span class="typing">typing…</span>' : '<i class="on" aria-hidden="true"></i>online · ' + esc((TONES[C().tone] || TONES.plain).label.toLowerCase()) + " from " + esc(p.year);
+  $("#fmSub").innerHTML = S.typing ? '<span class="typing">typing…</span>' : '<i class="on" aria-hidden="true"></i>online · ' + esc((TONES[C().tone] || TONES.plain).label.toLowerCase()) + " from " + esc(dateShort());
   $("#chatInput").placeholder = "Message Future " + p.name + "…";
   $("#clearChatBtn").textContent = S.confirmClear ? "Tap again to clear the whole chat" : "Clear chat history";
   $("#hfTitle").textContent = "Put Future " + p.name + " on your home screen";
 }
 function renderChat() {
   const p = S.profile, qs = S.brain.qualities, rules = C().rules;
-  let html = '<div class="panel intro"><p class="eyebrow">Who I am in ' + esc(p.year) + '</p><p class="vision">' + esc(p.vision) + "</p>";
+  let html = '<div class="panel intro"><div class="introtop"><p class="eyebrow">Me, on ' + esc(dateLong()) + '</p><span class="countdown">' + esc(countdownText()) + '</span></div><p class="vision">' + esc(p.vision) + "</p>";
   if (qs.length) html += '<div class="qpills">' + qs.map(q => '<span class="qpill">' + esc(q.name) + "</span>").join("") + "</div>";
   if (rules.length) html += '<p class="eyebrow">Rules I live by</p><ul class="rules">' + rules.map(x => "<li>" + esc(x) + "</li>").join("") + "</ul>";
   html += '<p class="fine">I\'m the offline Future Me: I text you check-ins, remember how you\'re feeling, and live out the qualities you give me. Tap Teach to shape me.</p></div>';
@@ -1854,9 +1864,9 @@ function claudePrompt() {
   const question = draft || (lastUser ? lastUser.text : "What should I focus on this week?");
   const mood = S.meta.moods[dayKey()];
   const lines = [
-    "Please talk to me as Future " + p.name + ": me in " + p.year + ", who has already become the person below. I'm in the UK.",
+    "Please talk to me as Future " + p.name + ": me on " + dateLong() + " (" + fmt(Math.max(0, daysToGo())) + " days from today), who has already become the person below. I'm in the UK.",
     "Talk like a close friend texting me: casual, warm, honest, short messages, and ask me something back.",
-    "", "Who I am in " + p.year + ":", p.vision
+    "", "Who I am on " + dateLong() + ":", p.vision
   ];
   if (S.brain.qualities.length) lines.push("", "My future self's qualities. Show them in how you talk and in the advice you give:", S.brain.qualities.map(q => "- " + q.name + (q.how ? ": " + q.how : "")).join("\n"));
   lines.push("", "Where I am now:", p.now, "", "Personality: " + S.brain.style, "Tone: " + tone.label + " (" + tone.desc + "). Call me: " + (c.calls || p.name) + ".");
@@ -1921,7 +1931,7 @@ $("#copyLink").addEventListener("click", async () => {
 let editingId = null, delArmed = false, editingQ = null, qDelArmed = false;
 function renderTeach() {
   const c = C(), a = A();
-  $("#tYear").textContent = S.profile.year;
+  $("#tYear").textContent = dateLong();
   $("#qList").innerHTML = S.brain.qualities.length ? S.brain.qualities.map(q =>
     '<button type="button" class="rowbtn" data-act="edit-quality" data-id="' + esc(q.id) + '"><span class="rt">' + esc(q.name) + '</span><span class="rs">' + esc(q.how || "Tap to describe how Future Me shows it") + "</span></button>").join("")
     : '<div class="rowbtn" style="cursor:default"><span class="rs">No qualities yet. Add some below.</span></div>';
@@ -2068,15 +2078,16 @@ $("#clearChatBtn").addEventListener("click", () => {
 /* ---------- vision ---------- */
 function openVision() {
   const p = S.profile;
-  $("#vName").value = p.name; $("#vYear").value = p.year; $("#vVision").value = p.vision; $("#vNow").value = p.now;
+  $("#vName").value = p.name; $("#vDate").value = p.date; $("#vDate").min = dayKey(addDays(new Date(), 1)); $("#vDate").max = "2100-12-31"; $("#vVision").value = p.vision; $("#vNow").value = p.now;
   openSheet("#sheetVision");
 }
 $("#visionForm").addEventListener("submit", e => {
   e.preventDefault();
-  const year = parseInt($("#vYear").value, 10);
+  const dv = $("#vDate").value;
+  if (!/^\d{4}-\d\d-\d\d$/.test(dv) || parseDay(dv) <= new Date() || dv > "2100-12-31") { toast("Pick a date in the future."); $("#vDate").focus(); return; }
   S.profile = {
     name: $("#vName").value.trim().slice(0, 40) || DEFAULT_PROFILE.name,
-    year: year >= 2027 && year <= 2060 ? year : DEFAULT_PROFILE.year,
+    date: dv, year: +dv.slice(0, 4), dateSet: true,
     vision: $("#vVision").value.trim() || DEFAULT_PROFILE.vision,
     now: $("#vNow").value.trim() || DEFAULT_PROFILE.now
   };
