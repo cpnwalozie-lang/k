@@ -160,7 +160,10 @@ details.done-list .list{margin-top:8px}
 .chat-who{flex:1;min-width:0}
 .chat-who h2{font-size:24px}
 .status{display:flex;align-items:center;gap:6px;min-height:18px;font-size:12.5px;color:var(--muted)}
-.status .on{width:7px;height:7px;border-radius:50%;background:var(--c-money);flex:none}
+.status .on{width:7px;height:7px;border-radius:50%;background:var(--muted);opacity:.7;flex:none}
+.status.ai{color:var(--c-money)}
+.status.ai .on{background:var(--c-money);opacity:1;box-shadow:0 0 0 3px color-mix(in srgb,var(--c-money) 22%,transparent)}
+.status .st{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;min-width:0}
 .status .typing{color:var(--xp);font-style:italic}
 .chat-log{flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch;overscroll-behavior:contain}
 .chat-log .wrap{display:flex;flex-direction:column;gap:8px;padding-block:14px}
@@ -198,12 +201,6 @@ details.done-list .list{margin-top:8px}
 .intro .rules{margin:0;padding-left:18px;display:flex;flex-direction:column;gap:2px}
 .qpills{display:flex;flex-wrap:wrap;gap:6px}
 .gpill{color:var(--c-money)!important;background:color-mix(in srgb,var(--c-money) 10%,transparent)!important;border-color:color-mix(in srgb,var(--c-money) 35%,transparent)!important}
-.aistat{font-weight:600;font-size:14px;color:var(--muted)}
-.aistat.on{color:var(--c-money)}
-.aictl{display:flex;flex-direction:column;gap:10px}
-.aictl[hidden]{display:none}
-.hint.tip{border:1px solid var(--line-2);border-radius:12px;padding:10px 12px}
-.hint.tip a{color:inherit;font-weight:600}
 .msg.note{background:transparent;border:1px dashed var(--line-2);color:var(--muted);font-size:13px}
 .qpill{font-size:12.5px;color:var(--lilac);background:var(--xp-soft);border:1px solid rgba(187,164,242,.35);border-radius:999px;padding:3px 11px}
 .eyebrow{font-size:11.5px;letter-spacing:.12em;text-transform:uppercase;font-weight:600;color:var(--muted)}
@@ -548,37 +545,6 @@ a.btn{text-decoration:none}
   <div class="sheet" role="dialog" aria-modal="true" aria-labelledby="tTitle">
     <div class="grab"></div>
     <h2 id="tTitle">Teach Future Me</h2>
-    <div class="teach-block" id="aiBlock">
-      <h3>Real AI</h3>
-      <p class="muted">Connect Future Me to Claude so it understands anything you say and talks back like a real conversation, using everything you teach it below. It can also add quests, make promises and save wins for you. Without this, Future Me uses its offline replies.</p>
-      <p class="aistat" id="aiStatus">Off</p>
-      <div id="aiSubControls" class="aictl" hidden>
-        <p class="hint">Future Me talks through your own Claude account, so it's covered by your Claude subscription: no API key and nothing extra to pay. It counts towards your normal Claude usage limits. The first time you message, Claude asks you to allow it.</p>
-        <label class="switch"><input type="checkbox" id="aiSubT"> <span>Use real AI for Future Me</span></label>
-        <span class="lbl">Replies</span>
-        <div class="seg" role="radiogroup" aria-label="Reply style">
-          <label><input type="radio" name="aitier" id="ait-default" value="default"><span>Balanced</span></label>
-          <label><input type="radio" name="aitier" id="ait-quick" value="quick"><span>Fastest</span></label>
-          <label><input type="radio" name="aitier" id="ait-complex" value="complex"><span>Deepest</span></label>
-        </div>
-        <p class="hint" id="aiSubCount"></p>
-      </div>
-      <div id="aiControls" class="aictl">
-        <p class="hint tip" id="aiSubTip">No extra cost: open the <a href="https://claude.ai/artifact/RjUUxyS552jUKGnN9ZSgbk" target="_blank" rel="noopener">Claude version of this app</a> while signed in to Claude, and Future Me uses your Claude subscription instead. Move your data across with Backup and Restore in Trophies. The API key below is only if you want this website version to use real AI, and it's billed separately.</p>
-        <label class="lbl" for="aiKeyIn">Your Claude API key</label>
-        <div class="inline"><input class="field" id="aiKeyIn" type="password" autocomplete="off" spellcheck="false" placeholder="sk-ant-…"><button class="btn sm" id="aiSave" type="button">Save</button></div>
-        <p class="hint">Saved on this phone only. It's never put in backups and only ever sent to Anthropic. When AI is on, your messages and the app details Future Me needs (quests, habits, mood) go to Anthropic to get a reply. Get a key at platform.claude.com under API keys. API use is pay-as-you-go and separate from a Claude subscription.</p>
-        <label class="switch" id="aiOnRow"><input type="checkbox" id="aiOnT"> <span>Use real AI for Future Me</span></label>
-        <span class="lbl">Model</span>
-        <div class="seg" role="radiogroup" aria-label="Model">
-          <label><input type="radio" name="aimodel" id="aim-claude-opus-5-5" value="claude-opus-5-5"><span>Opus 5.5 · smartest</span></label>
-          <label><input type="radio" name="aimodel" id="aim-claude-sonnet-5-5" value="claude-sonnet-5-5"><span>Sonnet 5.5 · balanced</span></label>
-          <label><input type="radio" name="aimodel" id="aim-claude-haiku-5-5" value="claude-haiku-5-5"><span>Haiku 5.5 · cheapest</span></label>
-        </div>
-        <p class="hint" id="aiCost"></p>
-        <div class="btnrow"><button class="btn ghost sm" id="aiTest" type="button">Test connection</button><button class="btn ghost sm" id="aiForget" type="button">Remove key</button></div>
-      </div>
-    </div>
     <div class="teach-block">
       <h3>Try it</h3>
       <div class="inline"><input class="field" id="tTest" placeholder="Type something you might say…" autocomplete="off" aria-label="Test message"><button class="btn sm" id="tTestBtn" type="button">Test</button></div>
@@ -824,7 +790,7 @@ const lowerFirst = s => /^[A-Z][a-z]/.test(s) ? s.charAt(0).toLowerCase() + s.sl
 const endStop = s => { const t = String(s || "").trim(); return !t ? "" : /[.!?]$/.test(t) ? t : t + "."; };
 const firstSentence = s => { const m = String(s || "").match(/^.*?[.!?](?=\s|$)/); return (m ? m[0] : String(s || "")).trim(); };
 const BR = "\n\u2063\n"; /* splits one reply into separate text bubbles */
-const APP_VERSION = 10, APP_UPDATED = "7 November 2026";
+const APP_VERSION = 11, APP_UPDATED = "7 November 2026";
 const APP_URL = /^https?:$/.test(location.protocol) && !/claudeusercontent|claude\.ai/.test(location.hostname) ? location.origin + location.pathname.replace(/index\.html$/, "") : "https://claude.ai/artifact/RjUUxyS552jUKGnN9ZSgbk";
 
 /* ---------- game rules ---------- */
@@ -1224,7 +1190,6 @@ function ensureBrain() {
   if (!ACC[b.account.level]) b.account.level = "firm";
   if (!/^\d\d:\d\d$/.test(b.account.checkinTime)) b.account.checkinTime = "08:00";
   if (!/^\d\d:\d\d$/.test(b.account.eveningTime)) b.account.eveningTime = "20:30";
-  b.ai = Object.assign({ on: true, model: "claude-opus-5-5", sub: true, tier: "default" }, b.ai || {});
   if (!Array.isArray(b.goals)) b.goals = DEFAULT_GOAL_NAMES.map(n => makeGoal(GOAL_LIBRARY.find(g => g.name === n)));
   if (!Array.isArray(b.qualities)) b.qualities = DEFAULT_QUALITY_NAMES.map(n => makeQuality(QUALITY_LIBRARY.find(q => q.name === n)));
 }
@@ -2090,7 +2055,9 @@ function renderFutureHead() {
   const p = S.profile;
   $("#fmAvatar").textContent = (p.name || "C").trim().charAt(0).toUpperCase();
   $("#fmName").textContent = "Future " + p.name;
-  $("#fmSub").innerHTML = S.typing ? '<span class="typing">typing…</span>' : '<i class="on" aria-hidden="true"></i>' + (aiActive() ? "real AI · " : "online · ") + "me from " + esc(dateShort());
+  $("#fmSub").innerHTML = S.typing ? '<span class="typing">typing…</span>' : '<i class="on" aria-hidden="true"></i><span class="st">me from ' + esc(dateShort()) + "</span>";
+  $("#fmSub").classList.toggle("ai", aiActive()); /* green: Claude is replying; grey: offline replies */
+  $("#fmSub").title = aiActive() ? "Green: replying with Claude" : "Grey: offline replies";
   $("#chatInput").placeholder = "Message Future " + p.name + "…";
   $("#clearChatBtn").textContent = S.confirmClear ? "Tap again to clear the whole chat" : "Clear chat history";
   $("#hfTitle").textContent = "Put Future " + p.name + " on your home screen";
@@ -2101,7 +2068,7 @@ function renderChat() {
   if (qs.length) html += '<div class="qpills">' + qs.map(q => '<span class="qpill">' + esc(q.name) + "</span>").join("") + "</div>";
   if (S.brain.goals.length) html += '<p class="eyebrow">Already achieved</p><div class="qpills">' + S.brain.goals.map(g => '<span class="qpill gpill">\u2713 ' + esc(g.name) + "</span>").join("") + "</div>";
   if (rules.length) html += '<p class="eyebrow">Rules I live by</p><ul class="rules">' + rules.map(x => "<li>" + esc(x) + "</li>").join("") + "</ul>";
-  html += '<p class="fine">' + (aiActive() ? "I'm connected to real AI: talk to me about anything. I use everything you've taught me, and I can add quests and save wins for you." : "I'm the offline Future Me: I text you check-ins, remember how you're feeling, and live out the qualities you give me. Tap Teach to shape me, or turn on Real AI to talk to me about anything.") + "</p></div>";
+  html += '<p class="fine">' + (aiActive() ? "Talk to me about anything. I use everything you've taught me, and I can add quests, make promises and save wins for you." : "I text you check-ins, remember how you're feeling, and live out the qualities you give me. Tap Teach to shape me.") + "</p></div>";
   let lastFm = -1, lastUser = -1;
   S.chat.forEach((t, i) => { if (t.role === "fm") lastFm = i; else lastUser = i; });
   let prevDay = "";
@@ -2138,12 +2105,8 @@ async function say(text, opts) {
     if (mood) S.meta.moods[dayKey()] = mood;
     S.awaitWin = false; S.meta.ctx = null;
     const msg = mood ? "My mood today: " + mood + "/5" : text;
-    let Anthropic = null;
-    try {
-      if (aiSubActive()) reply = await aiRespondSub(msg);
-      else { Anthropic = await loadAiSdk(); reply = await aiRespond(msg); }
-    }
-    catch (err) { S.chat.push({ role: "fm", kind: "note", text: (err && err.subNote ? err.subNote : aiErrorNote(err, Anthropic)) + " Here's my offline reply for now:", at: Date.now() }); }
+    try { reply = await aiRespond(msg); }
+    catch (err) { S.chat.push({ role: "fm", kind: "note", text: (err && err.note ? err.note : "I couldn't reach Claude just then.") + " Here's my offline reply for now:", at: Date.now() }); }
   }
   if (!reply) reply = respond(text, opts);
   const parts = splitBubbles(reply.text);
@@ -2258,7 +2221,7 @@ function renderTeach() {
   $("#cCalls").value = c.calls; $("#tStyle").value = S.brain.style; $("#cCatch").value = c.catchphrases.join("\n"); $("#cRules").value = c.rules.join("\n"); $("#cNever").value = c.never;
   const f = $("#cf-" + c.catchFreq); if (f) f.checked = true;
   $("#cNext").checked = !!c.remindNext; $("#cStreak").checked = !!c.streak; $("#cEmoji").checked = !!c.emoji; $("#tSignoff").value = S.brain.signoff;
-  S.confirmClear = false; renderFutureHead(); renderAi();
+  S.confirmClear = false; renderFutureHead();
   renderLessons();
 }
 function renderLessons() {
@@ -2421,28 +2384,11 @@ $("#clearChatBtn").addEventListener("click", () => {
   save(); renderChat(); renderFutureHead(); renderTabBadge(); toast("Chat cleared");
 });
 
-/* ---------- Real AI: Future Me through Claude (only with your own API key) ---------- */
-const AI_KEY_STORE = "futureChris.apiKey"; /* kept on this phone only: never in backups, only ever sent to Anthropic */
-const AI_SDK = "./vendor/anthropic-sdk-1.3.0.js"; /* the official Anthropic SDK, bundled with the app */
-const AI_AVAILABLE = /^https?:$/.test(location.protocol) && !/claudeusercontent|claude\.ai/.test(location.hostname);
-const AI_MODELS = {
-  "claude-opus-5-5": { label: "Opus 5.5", note: "smartest", inP: 4, outP: 20, cwP: 5, crP: 0.2, fallbacks: true },
-  "claude-sonnet-5-5": { label: "Sonnet 5.5", note: "balanced", inP: 2, outP: 10, cwP: 2.5, crP: 0.2, fallbacks: true },
-  "claude-haiku-5-5": { label: "Haiku 5.5", note: "cheapest", inP: 0.1, outP: 0.5, cwP: 0.125, crP: 0.01, fallbacks: false }
-};
-let aiSdk = null;
-const loadAiSdk = () => aiSdk || (aiSdk = import(AI_SDK).then(m => m.default).catch(e => { aiSdk = null; throw e; }));
-function aiKey() { try { return localStorage.getItem(AI_KEY_STORE) || ""; } catch (e) { return ""; } }
-function setAiKey(k) { try { if (k) localStorage.setItem(AI_KEY_STORE, k); else localStorage.removeItem(AI_KEY_STORE); return true; } catch (e) { return false; } }
-const AIcfg = () => S.brain.ai;
-const aiModel = () => AI_MODELS[AIcfg().model] ? AIcfg().model : "claude-opus-5-5";
-const aiKeyActive = () => AI_AVAILABLE && !!AIcfg().on && !!aiKey();
-/* Inside Claude, Future Me can use the viewer's own Claude account (their subscription): no key, no extra bill. */
-let aiSample = null, aiSampleTools = false, aiSubBlocked = "";
-const aiSubActive = () => !!aiSample && AIcfg().sub !== false && !aiSubBlocked;
-const aiActive = () => aiSubActive() || aiKeyActive();
-const AI_TIERS = { default: { label: "Balanced", effort: "low" }, quick: { label: "Fastest", effort: null }, complex: { label: "Deepest", effort: "medium" } };
-const aiTier = () => AI_TIERS[AIcfg().tier] ? AIcfg().tier : "default";
+/* ---------- Future Me through Claude ----------
+   Inside Claude, Future Me talks through your own Claude account (covered by your subscription:
+   no API key, no extra bill). Anywhere else, it uses its offline replies. */
+let aiSample = null, aiSampleTools = false, aiBlocked = "";
+const aiActive = () => !!aiSample && !aiBlocked;
 
 /* Everything you've taught Future Me becomes its instructions. */
 function aiPersona(noTools) {
@@ -2572,152 +2518,47 @@ function runAiTool(u, actions) {
   }
   return fail("Unknown tool.");
 }
-function aiUsage() {
-  const month = dayKey().slice(0, 7);
-  if (!S.meta.aiUsage || S.meta.aiUsage.month !== month) S.meta.aiUsage = { month, cost: 0, replies: 0 };
-  return S.meta.aiUsage;
-}
-function trackAiUsage(model, u) {
-  if (!u) return;
-  const pr = AI_MODELS[model] || AI_MODELS["claude-opus-5-5"];
-  aiUsage().cost += ((u.input_tokens || 0) * pr.inP + (u.output_tokens || 0) * pr.outP + (u.cache_creation_input_tokens || 0) * pr.cwP + (u.cache_read_input_tokens || 0) * pr.crP) / 1e6;
+function aiTools(actions) {
+  return AI_TOOLS.map(t => ({ name: t.name, description: t.description, inputSchema: t.input_schema,
+    execute: input => { const r = runAiTool({ id: "fm", name: t.name, input }, actions); if (r.is_error) throw new Error(r.content); return JSON.parse(r.content); } }));
 }
 async function aiRespond(text) {
-  const Anthropic = await loadAiSdk();
-  const model = aiModel();
-  const client = new Anthropic({ apiKey: aiKey(), dangerouslyAllowBrowser: true, maxRetries: 1, timeout: 120000 });
-  const messages = aiHistory(text), actions = [], said = [];
-  let jsonRetries = 0;
-  for (let round = 0; round < 5; round++) {
-    const params = { model, max_tokens: 16000, output_config: { effort: "low" },
-      system: [{ type: "text", text: aiPersona(), cache_control: { type: "ephemeral" } }], tools: AI_TOOLS, messages };
-    if (AI_MODELS[model].fallbacks) { params.betas = ["server-side-fallback-2026-07-01"]; params.fallbacks = "default"; }
-    let msg;
-    try { msg = await client.beta.messages.stream(params).finalMessage(); jsonRetries = 0; }
-    catch (err) {
-      if (err instanceof Anthropic.APIError || jsonRetries++ >= 1) throw err;
-      continue; /* a streamed tool input that could not be parsed: ask again once */
-    }
-    trackAiUsage(model, msg.usage);
-    if (msg.stop_reason === "refusal") { said.push(fill("I can't go there, {you}. Let's talk about something else.")); break; }
-    const t = msg.content.filter(b => b.type === "text").map(b => b.text.trim()).filter(Boolean).join("\n\n");
-    if (t) said.push(t);
-    const uses = msg.content.filter(b => b.type === "tool_use");
-    if (msg.stop_reason !== "tool_use" || !uses.length) break; /* also stops a tool call cut off at max_tokens */
-    messages.push({ role: "assistant", content: msg.content });
-    messages.push({ role: "user", content: uses.map(u => runAiTool(u, actions)) });
-  }
-  aiUsage().replies += 1;
-  if (actions.length) { save(); renderQuests(); renderNotes(); renderTrophies(); }
-  const reply = said.join("\n\n").trim() || fill("I'm here, {you}. Tell me more?");
-  return { text: reply.split(/\n\s*\n/).map(s => s.trim()).filter(Boolean).join(BR), actions };
-}
-/* Future Me through the viewer's own Claude account (only inside Claude). */
-function aiSubTools(actions) {
-  return AI_TOOLS.map(t => ({ name: t.name, description: t.description, inputSchema: t.input_schema,
-    execute: input => { const r = runAiTool({ id: "sub", name: t.name, input }, actions); if (r.is_error) throw new Error(r.content); return JSON.parse(r.content); } }));
-}
-async function aiRespondSub(text) {
-  const actions = [], tier = aiTier();
+  const actions = [];
   const turns = aiHistory(text).map(m => ({ role: m.role, content: typeof m.content === "string" ? m.content : m.content.map(b => b.text).join("\n\n") }));
   turns.unshift({ role: "user", content: "<instructions>\n" + aiPersona(!aiSampleTools) + "\n</instructions>\nStay as Future " + S.profile.name + " for the whole chat below and reply only with your texts." });
-  const opts = { cache: false, modelTier: tier };
-  if (AI_TIERS[tier].effort) opts.effort = AI_TIERS[tier].effort;
-  if (aiSampleTools) opts.tools = aiSubTools(actions);
+  const opts = { cache: false, modelTier: "default", effort: "low" };
+  if (aiSampleTools) opts.tools = aiTools(actions);
+  const done = () => { if (actions.length) { save(); renderQuests(); renderNotes(); renderTrophies(); } };
+  const bubbles = t => t.split(/\n\s*\n/).map(x => x.trim()).filter(Boolean).join(BR);
   let res;
   try { res = await aiSample(turns, opts); }
   catch (e) {
-    if (actions.length) { save(); renderQuests(); renderNotes(); renderTrophies(); }
+    done();
     const code = e && e.code, partial = e && typeof e.text === "string" ? e.text.trim() : "";
     if (code === "refused") return { text: fill("I can't go there, {you}. Let's talk about something else."), actions };
     if (code === "empty_completion") return { text: fill("I'm here, {you}. Tell me more?"), actions };
-    if (partial && (code === "rate_limited" || code === "upstream_error")) return { text: partial.split(/\n\s*\n/).map(x => x.trim()).filter(Boolean).join(BR) + BR + "(I got cut off there. Say that again in a bit?)", actions };
-    let note = "Claude didn't answer just then. Try again in a moment.";
-    if (code === "not_granted") { aiSubBlocked = code; note = "Real AI isn't allowed on this page yet, so I'm on offline replies. To allow it, reopen the app and tap Allow when Claude asks, or use the page's Permissions menu."; }
-    else if (["sampling_disabled", "not_declared", "capability_disabled", "capability_removed"].includes(code)) { aiSubBlocked = code; note = "Real AI isn't available for your Claude account here."; }
+    if (partial && (code === "rate_limited" || code === "upstream_error")) return { text: bubbles(partial) + BR + "(I got cut off there. Say that again in a bit?)", actions };
+    let note = "I couldn't reach Claude just then. Try again in a moment.";
+    if (code === "not_granted") { aiBlocked = code; note = "Claude isn't allowed on this page yet. Reopen the app and tap Allow when Claude asks."; }
+    else if (["sampling_disabled", "not_declared", "capability_disabled", "capability_removed"].includes(code)) { aiBlocked = code; note = "I can't use Claude on your account here."; }
     else if (code === "rate_limited") note = "You've hit your Claude usage limit for now. It resets soon.";
-    else if (code === "session_expired") note = "Sign in to Claude again to turn real AI back on.";
+    else if (code === "session_expired") note = "You've been signed out of Claude. Sign in again and I'll be back to normal.";
     else if (code === "prompt_too_large") note = "Our chat got too long for Claude. Clear the chat to start fresh.";
-    throw { subNote: note };
+    throw { note };
   }
-  aiUsage().replies += 1;
-  if (actions.length) { save(); renderQuests(); renderNotes(); renderTrophies(); }
+  done();
   const reply = String(res.text || "").trim() || fill("I'm here, {you}. Tell me more?");
-  return { text: reply.split(/\n\s*\n/).map(x => x.trim()).filter(Boolean).join(BR), actions };
+  return { text: bubbles(reply), actions };
 }
 if (window.claude && typeof window.claude.use === "function") {
   window.claude.use("sample").then(fn => {
     if (!fn) return;
     aiSample = fn;
-    const show = () => { renderAi(); renderFutureHead(); renderChat(); };
+    const show = () => { renderFutureHead(); renderChat(); };
     show();
     Promise.resolve(fn.limits()).then(l => { aiSampleTools = !!(l && l.tools); }).catch(() => {}).then(show);
   }).catch(() => {});
 }
-function aiErrorNote(err, Anthropic) {
-  if (!Anthropic) return "I couldn't load the AI part of the app. Check your internet.";
-  if (err instanceof Anthropic.AuthenticationError) return "Your Claude API key isn't working. Check it in Teach → Real AI.";
-  if (err instanceof Anthropic.PermissionDeniedError) return "Your Claude API key isn't allowed to do this. Check it at platform.claude.com.";
-  if (err instanceof Anthropic.RateLimitError) return "Claude is busy, or your account hit its limit. Try again in a minute.";
-  if (err instanceof Anthropic.APIConnectionError) return "I can't reach Claude right now. Check your internet.";
-  if (err instanceof Anthropic.InternalServerError) return "Claude is having a moment. Try again shortly.";
-  if (err instanceof Anthropic.APIError) return err.type === "billing_error" || err.status === 402 || /credit balance/i.test(err.message || "") ? "Your Claude account needs credit. Add some at platform.claude.com, under Billing." : "Claude couldn't answer that (error " + (err.status || "?") + "). If it keeps happening, check your account and credit at platform.claude.com.";
-  return "Something went wrong talking to Claude.";
-}
-
-/* Teach → Real AI */
-function renderAi() {
-  const cfg0 = AIcfg();
-  $("#aiSubControls").hidden = !aiSample;
-  if (aiSample) {
-    $("#aiControls").hidden = true;
-    $("#aiStatus").textContent = aiSubBlocked ? "Not allowed on this page · Future Me is using offline replies" : cfg0.sub !== false ? "On · using your Claude subscription · no API key needed" : "Off · Future Me is using offline replies";
-    $("#aiStatus").className = "aistat" + (aiSubActive() ? " on" : "");
-    $("#aiSubT").checked = cfg0.sub !== false;
-    const tr = $("#ait-" + aiTier()); if (tr) tr.checked = true;
-    const U0 = S.meta.aiUsage, mine0 = U0 && U0.month === dayKey().slice(0, 7);
-    $("#aiSubCount").textContent = "This month: " + (mine0 && U0.replies ? U0.replies + (U0.replies === 1 ? " AI reply" : " AI replies") : "no AI replies yet") + ". Covered by your Claude plan.";
-    return;
-  }
-  if (!AI_AVAILABLE) { $("#aiStatus").textContent = "Real AI works when you open this page in Claude while signed in, or in the website version with an API key."; $("#aiControls").hidden = true; return; }
-  $("#aiControls").hidden = false;
-  const k = aiKey(), cfg = AIcfg(), m = AI_MODELS[aiModel()];
-  $("#aiStatus").textContent = !k ? "Off · Future Me is using offline replies" : cfg.on ? "On · " + m.label + " · key ending " + k.slice(-4) : "Paused · Future Me is using offline replies";
-  $("#aiStatus").className = "aistat" + (k && cfg.on ? " on" : "");
-  $("#aiKeyIn").value = ""; $("#aiKeyIn").placeholder = k ? "Saved key ending " + k.slice(-4) : "sk-ant-…";
-  $("#aiOnRow").hidden = !k; $("#aiOnT").checked = !!cfg.on;
-  const r = $("#aim-" + aiModel()); if (r) r.checked = true;
-  $("#aiTest").hidden = !k; $("#aiForget").hidden = !k; $("#aiForget").textContent = "Remove key"; aiForgetArmed = false;
-  const U = S.meta.aiUsage, mine = U && U.month === dayKey().slice(0, 7);
-  $("#aiCost").textContent = "This month: " + (mine && U.replies ? U.replies + (U.replies === 1 ? " AI reply" : " AI replies") + ", about $" + U.cost.toFixed(2) : "no AI replies yet") + ". This is an estimate; your exact bill is at platform.claude.com.";
-}
-let aiForgetArmed = false;
-$("#aiSave").addEventListener("click", () => {
-  const v = $("#aiKeyIn").value.trim();
-  if (!/^sk-ant-[\w-]{8,}$/.test(v)) { toast("That doesn't look like a Claude API key. It starts with sk-ant-"); $("#aiKeyIn").focus(); return; }
-  if (!setAiKey(v)) { toast("This browser won't save the key. Turn off private browsing."); return; }
-  AIcfg().on = true; save(); renderAi(); renderFutureHead(); renderChat(); toast("Real AI is on", "xp");
-});
-$("#aiSubT").addEventListener("change", () => { AIcfg().sub = $("#aiSubT").checked; save(); renderAi(); renderFutureHead(); renderChat(); });
-$$("input[name=aitier]").forEach(el => el.addEventListener("change", () => { AIcfg().tier = el.value; save(); renderAi(); toast("Replies: " + AI_TIERS[el.value].label); }));
-$("#aiOnT").addEventListener("change", () => { AIcfg().on = $("#aiOnT").checked; save(); renderAi(); renderFutureHead(); renderChat(); });
-$$("input[name=aimodel]").forEach(el => el.addEventListener("change", () => { AIcfg().model = el.value; save(); renderAi(); toast("Future Me will use " + AI_MODELS[el.value].label); }));
-$("#aiForget").addEventListener("click", () => {
-  if (!aiForgetArmed) { aiForgetArmed = true; $("#aiForget").textContent = "Confirm"; $("#aiForget").classList.add("danger"); return; }
-  setAiKey(""); $("#aiForget").classList.remove("danger"); renderAi(); renderFutureHead(); renderChat(); toast("Key removed from this phone");
-});
-$("#aiTest").addEventListener("click", async () => {
-  const b = $("#aiTest"); b.disabled = true; b.textContent = "Testing…";
-  let Anthropic = null;
-  try {
-    Anthropic = await loadAiSdk();
-    const client = new Anthropic({ apiKey: aiKey(), dangerouslyAllowBrowser: true, maxRetries: 1, timeout: 60000 });
-    const res = await client.messages.create({ model: aiModel(), max_tokens: 1000, output_config: { effort: "low" }, messages: [{ role: "user", content: "Reply with just the word: Connected" }] });
-    trackAiUsage(aiModel(), res.usage); save();
-    toast("Connected to Claude " + AI_MODELS[aiModel()].label + " ✓", "xp");
-  } catch (err) { toast(aiErrorNote(err, Anthropic)); }
-  b.disabled = false; b.textContent = "Test connection"; renderAi();
-});
 
 /* ---------- vision ---------- */
 function openVision() {
