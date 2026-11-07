@@ -668,7 +668,7 @@ a.btn{text-decoration:none}
     <h2 id="lfTitle">New lesson</h2>
     <div class="row"><label class="lbl" for="lName">Lesson name</label><input class="field" id="lName" maxlength="60" placeholder="e.g. Gym motivation" autocomplete="off"></div>
     <div class="row" id="lWordsRow"><label class="lbl" for="lWords">When I say any of these</label><input class="field" id="lWords" placeholder="gym, workout, training" autocomplete="off"><p class="hint">Words or short phrases, separated by commas. Endings like -s, -ed and -ing match too.</p></div>
-    <div class="row"><label class="lbl" for="lReplies">Future Me replies</label><textarea class="field" id="lReplies" rows="8" placeholder="Write a reply here.&#10;&#10;Leave a blank line, then write another. I'll pick one at random each time."></textarea><p class="hint">Fill-ins: {you} (what I call you) {name} {date} (your Future Me date) {days} (days to go) {next} (your next quest) {streak} {level} {rank} {quote}. Put **double stars** around words to make them bold.</p></div>
+    <div class="row"><label class="lbl" for="lReplies">Future Me replies</label><textarea class="field" id="lReplies" rows="8" placeholder="Write a reply here.&#10;&#10;Leave a blank line, then write another. I'll pick one at random each time."></textarea><p class="hint">Future Me sends these exactly as you write them, with nothing added. Fill-ins: {you} (what I call you) {name} {date} (your Future Me date) {days} (days to go) {next} (your next quest) {streak} {level} {rank} {quote}. Put **double stars** around words to make them bold.</p></div>
     <div class="row" id="lChipRow"><label class="lbl" for="lChip">Quick button (optional)</label><input class="field" id="lChip" maxlength="40" placeholder="e.g. Gym" autocomplete="off"><p class="hint">Adds a button above the chat box that runs this lesson.</p></div>
     <label class="switch" id="lOnRow"><input type="checkbox" id="lOn" checked> <span>Lesson is on</span></label>
     <div class="actions"><button type="button" class="btn ghost" id="lDel">Delete</button><button type="submit" class="btn">Save lesson</button></div>
@@ -763,7 +763,7 @@ const lowerFirst = s => /^[A-Z][a-z]/.test(s) ? s.charAt(0).toLowerCase() + s.sl
 const endStop = s => { const t = String(s || "").trim(); return !t ? "" : /[.!?]$/.test(t) ? t : t + "."; };
 const firstSentence = s => { const m = String(s || "").match(/^.*?[.!?](?=\s|$)/); return (m ? m[0] : String(s || "")).trim(); };
 const BR = "\n\u2063\n"; /* splits one reply into separate text bubbles */
-const APP_VERSION = 5, APP_UPDATED = "7 November 2026";
+const APP_VERSION = 7, APP_UPDATED = "7 November 2026";
 const APP_URL = /^https?:$/.test(location.protocol) && !/claudeusercontent|claude\.ai/.test(location.hostname) ? location.origin + location.pathname.replace(/index\.html$/, "") : "https://claude.ai/artifact/RjUUxyS552jUKGnN9ZSgbk";
 
 /* ---------- game rules ---------- */
@@ -924,6 +924,10 @@ const DEFAULT_RULES = [
   { id: "hello", name: "Saying hello", chip: "", action: "askmood",
     words: "hi, hello, hey, hiya, yo, morning, good morning, good afternoon, good evening, evening, sup, what's up, whats up, wagwan",
     replies: ["Heyyy {you} 👋" + BR + "How are you doing today?", "There you are 😄" + BR + "How are you feeling?", "Yo {you}!" + BR + "How's today treating you?"] },
+  { id: "welcome", name: "Welcome message", chip: "", action: "system", words: "",
+    replies: ["Hey {you}! 👋" + BR + "It's me. Well… you, from {date} 😄 The version of you who made it. {countdown} until we meet." + BR +
+      "I'll check in on you every morning and evening, like a friend would. Tap the bell at the top to change the times, or to get reminders on your phone." + BR +
+      "So tell me, how are you feeling today?"] },
   { id: "fallback", name: "When nothing else matches", chip: "", action: "system", words: "",
     replies: [
       "Hmm, tell me a bit more?",
@@ -1553,7 +1557,7 @@ function quoteLine() {
 }
 function fill(s) {
   const st = stats(), Lv = levelInfo(st.xp), p = S.profile;
-  return String(s).replace(/\{you\}/g, () => youName()).replace(/\{name\}/g, () => p.name).replace(/\{year\}/g, () => p.year).replace(/\{date\}/g, () => dateLong()).replace(/\{days\}/g, () => fmt(Math.max(0, daysToGo())))
+  return String(s).replace(/\{you\}/g, () => youName()).replace(/\{name\}/g, () => p.name).replace(/\{year\}/g, () => p.year).replace(/\{date\}/g, () => dateLong()).replace(/\{days\}/g, () => fmt(Math.max(0, daysToGo()))).replace(/\{countdown\}/g, () => countdownText())
     .replace(/\{level\}/g, () => Lv.n).replace(/\{rank\}/g, () => Lv.rank).replace(/\{streak\}/g, () => st.cur)
     .replace(/\{next\}/g, () => nextStep()).replace(/\{quote\}/g, () => quoteLine());
 }
@@ -1561,7 +1565,7 @@ const futureDay = () => parseDay(S.profile.date);
 const dateLong = () => futureDay().toLocaleDateString("en-GB", { day: "numeric", month: "long", year: "numeric" });
 const dateShort = () => futureDay().toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric" });
 function daysToGo() { const t = new Date(); t.setHours(0, 0, 0, 0); return Math.round((futureDay() - t) / 864e5); }
-function countdownText() { const d = daysToGo(); return d > 1 ? fmt(d) + " days to go" : d === 1 ? "1 day to go" : d === 0 ? "It's the day!" : "We made it"; }
+function countdownText() { const d = daysToGo(); return d > 1 ? fmt(d) + " days to go" : d === 1 ? "1 day to go" : d === 0 ? "It's the day" : "We made it"; }
 const fillQ = (tpl, q) => fill(String(tpl).replace(/\{q\}/g, () => lowerFirst(q.name)).replace(/\{how\}/g, () => endStop(q.how))).replace(/\s+$/, "");
 const emo = s => C().emoji ? s : s.replace(/\s*[\u{1F300}-\u{1FAFF}\u2600-\u27BF\u2B50\u2763\u{1F004}]\uFE0F?/gu, "");
 function finish(text) { const so = S.brain.signoff.trim(); return so ? text + "\n\n" + fill(so) : text; }
@@ -1593,10 +1597,17 @@ function decorate(base, r, q) {
   if (extras.length < 2 && !quiet && Math.random() < 0.3) { const cl = pickFrom(tone.close, "close"); if (cl) extras.push(fill(cl)); }
   return (opener ? [fill(opener)] : []).concat([main], extras).join(BR);
 }
+/* A lesson you wrote, or one of mine you rewrote, is sent exactly as written: no extra lines added around it. */
+function isTaught(r) {
+  if (!r || !r.id) return false;
+  if (!r.builtin) return true;
+  const d = DEFAULT_RULES.find(x => x.id === r.id);
+  return !!d && JSON.stringify(r.replies) !== JSON.stringify(d.replies);
+}
 function pickReply(r, q) {
   const raw = pickFrom(r && r.replies, r && r.id);
   if (raw == null) return r && r.id !== "fallback" ? pickReply(ruleById("fallback"), q) : "Tell me more.";
-  return decorate(fill(raw), r, q);
+  return isTaught(r) ? fill(raw) : decorate(fill(raw), r, q);
 }
 function whoamiText(r) {
   const qs = S.brain.qualities;
@@ -1643,10 +1654,21 @@ function staleQuests() {
     .map(t => ({ t, d: Math.floor((now - t.created) / 864e5) })).sort((a, b) => b.d - a.d);
 }
 function welcomeText() {
-  return fill("Hey {you}! 👋") + BR +
-    fill("It's me. Well… you, from {date} 😄 The version of you who made it.") + (daysToGo() > 0 ? " Only " + fmt(daysToGo()) + " days until we meet." : "") + BR +
-    "I'll check in on you every morning and evening, like a friend would. Tap the bell at the top to change the times, or to get reminders on your phone." + BR +
-    "So tell me, how are you feeling today?";
+  const r = ruleById("welcome"), d = DEFAULT_RULES.find(x => x.id === "welcome");
+  const raw = (r && (r.replies || []).find(x => String(x).trim())) || d.replies[0];
+  return fill(raw.replace(/\{countdown\} until we meet\./g, () => daysToGo() > 0 ? "{countdown} until we meet." : "And we made it."));
+}
+/* Rewrites the welcome at the top of the chat so it always matches your current date, name and Welcome lesson. */
+function refreshWelcome() {
+  const i = S.chat.findIndex(t => t.kind === "welcome");
+  if (i < 0) return;
+  let end = i; while (end < S.chat.length && S.chat[end].kind === "welcome") end++;
+  const old = S.chat.slice(i, end), at = old[0].at || Date.now(), last = old[old.length - 1];
+  const fresh = splitBubbles(finish(welcomeText())).map((text, k) => ({ role: "fm", text, at: at + k, kind: "welcome" }));
+  const tail = fresh[fresh.length - 1];
+  if (last.quick) { tail.quick = last.quick; if (last.answered) tail.answered = true; }
+  if (old.some(t => t.unread)) fresh.forEach(t => { t.unread = true; });
+  S.chat.splice(i, end - i, ...fresh);
 }
 function missedText() {
   return fill("Oi {you}, where've you been? 😄 I've missed you.") + BR + fill("No judgement at all, life gets busy. Let's just do one small thing today: **{next}**.");
@@ -1748,14 +1770,14 @@ function compose(m, text, fromChip, dry) {
     case "whoami": return { text: whoamiText(r) };
     case "review": return { text: reviewText(r) };
     case "askwin": if (!dry) S.awaitWin = true; return { text: fill(pickFrom(r.replies, r.id) || "Tell me about it.") };
-    case "askmood": if (!dry) S.meta.ctx = { awaiting: "mood", at: Date.now() }; return { text: pickReply(rr), quick: MOOD_QUICK };
+    case "askmood": if (isTaught(r)) return { text: pickReply(rr) }; if (!dry) S.meta.ctx = { awaiting: "mood", at: Date.now() }; return { text: pickReply(rr), quick: MOOD_QUICK };
     case "win": { const out = { text: pickReply(rr, m.q) }; if (!fromChip) out.winOffer = text; return out; }
     default: return { text: pickReply(rr, m.q) };
   }
 }
 function withFollow(out, r, dry) {
   const f = r && FOLLOW[r.id];
-  if (!f || !f.ask || out.quick || out.offers || out.winOffer) return out;
+  if (!f || !f.ask || out.quick || out.offers || out.winOffer || isTaught(r)) return out;
   const la = S.meta.lastAsk;
   if (!dry && la && la.topic === r.id && Date.now() - la.at < 10 * 60000) return out;
   out.text += BR + fill(pickFrom(f.ask, "ask-" + r.id));
@@ -1809,7 +1831,7 @@ function respond(text, opts) {
   const m = routeMsg(text);
   let out = compose(m, text, false);
   if (m.kind === "rule") out = withFollow(out, m.rule);
-  if (A().promises) {
+  if (A().promises && !(m.kind === "rule" && isTaught(m.rule))) {
     const p = promiseFrom(text);
     if (p) { out.promiseOffer = { title: p, cat: guessCat(m, text), due: dueFromText(text) }; out.text += BR + fill(L().promiseAsk); }
   }
@@ -1822,7 +1844,7 @@ function previewFor(text) {
   let out = compose(m, text, false, true);
   if (m.kind === "rule") out = withFollow(out, m.rule, true);
   let name = m.kind === "quality" ? "Quality: " + m.q.name : m.rule.name, t = out.text;
-  if (A().promises && promiseFrom(text)) { t += BR + fill(L().promiseAsk); name += " + promise"; }
+  if (A().promises && !(m.kind === "rule" && isTaught(m.rule)) && promiseFrom(text)) { t += BR + fill(L().promiseAsk); name += " + promise"; }
   return { name, text: finish(t).split(BR).join("\n\n") };
 }
 function makePromise(p) {
@@ -2080,7 +2102,7 @@ function renderTeach() {
 }
 function renderLessons() {
   $("#tList").innerHTML = S.brain.rules.map(r => {
-    const when = r.action === "system" ? (r.id === "fallback" ? "Used when nothing else matches" : "Used after you share a win")
+    const when = r.action === "system" ? (r.id === "fallback" ? "Used when nothing else matches" : r.id === "welcome" ? "The first messages at the top of the chat. Each line is its own text" : "Used after you share a win")
       : r.words ? "When you say: " + r.words : "Button only";
     const n = (r.replies || []).length;
     return '<button type="button" class="rowbtn' + (r.on === false ? " off" : "") + '" data-act="edit-lesson" data-id="' + esc(r.id) + '">' +
@@ -2155,7 +2177,7 @@ $("#tSaveVoice").addEventListener("click", () => {
   c.never = $("#cNever").value.split(",").map(x => x.trim()).filter(Boolean).join(", ").slice(0, 300);
   c.remindNext = $("#cNext").checked; c.streak = $("#cStreak").checked; c.emoji = $("#cEmoji").checked;
   S.brain.signoff = $("#tSignoff").value.trim().slice(0, 160);
-  save(); renderFutureHead(); renderChat(); toast("Voice saved", "xp");
+  refreshWelcome(); save(); renderFutureHead(); renderChat(); toast("Voice saved", "xp");
   if ($("#tTest").value.trim()) runTest();
 });
 
@@ -2192,18 +2214,20 @@ $("#lessonForm").addEventListener("submit", e => {
   } else {
     S.brain.rules.unshift({ id: "my-" + uid(), name: name || words.split(",")[0] || chip || "My lesson", words, replies, chip, on: $("#lOn").checked, builtin: false, action: "" });
   }
-  save(); $("#sheetLesson").hidden = true; renderLessons(); renderTopics(); toast(r ? "Lesson updated" : "Lesson learned", "xp");
+  refreshWelcome(); save(); $("#sheetLesson").hidden = true; renderLessons(); renderTopics(); renderChat(); toast(r ? "Lesson updated" : "Lesson learned", "xp");
 });
 $("#lDel").addEventListener("click", () => {
   const r = ruleById(editingId); if (!r) return;
   if (!delArmed) { delArmed = true; $("#lDel").textContent = r.builtin ? "Tap again to reset" : "Tap again to delete"; $("#lDel").classList.add("danger"); return; }
   if (r.builtin) { const d = DEFAULT_RULES.find(x => x.id === r.id); if (d) Object.assign(r, cloneRule(d)); toast("Reset to original"); }
   else { S.brain.rules = S.brain.rules.filter(x => x.id !== r.id); toast("Lesson deleted"); }
-  save(); $("#sheetLesson").hidden = true; renderLessons(); renderTopics();
+  refreshWelcome(); save(); $("#sheetLesson").hidden = true; renderLessons(); renderTopics(); renderChat();
 });
 $("#clearChatBtn").addEventListener("click", () => {
   if (!S.confirmClear) { S.confirmClear = true; renderFutureHead(); setTimeout(() => { S.confirmClear = false; renderFutureHead(); }, 4000); return; }
-  S.confirmClear = false; S.chat = []; S.awaitWin = false; S.meta.ctx = null; save(); renderChat(); renderFutureHead(); renderTabBadge(); toast("Chat cleared");
+  S.confirmClear = false; S.chat = []; S.awaitWin = false; S.meta.ctx = null; S.meta.welcomed = false;
+  deliver(); if (currentTab() === "future") markRead();
+  save(); renderChat(); renderFutureHead(); renderTabBadge(); toast("Chat cleared");
 });
 
 /* ---------- vision ---------- */
@@ -2222,7 +2246,7 @@ $("#visionForm").addEventListener("submit", e => {
     vision: $("#vVision").value.trim() || DEFAULT_PROFILE.vision,
     now: $("#vNow").value.trim() || DEFAULT_PROFILE.now
   };
-  $("#sheetVision").hidden = true; save(); render(); toast("Vision saved");
+  refreshWelcome(); $("#sheetVision").hidden = true; save(); render(); toast("Vision saved");
 });
 
 /* ---------- one click handler for everything ---------- */
@@ -2310,6 +2334,7 @@ document.addEventListener("visibilitychange", () => { if (document.visibilitySta
 setInterval(() => { if (document.visibilityState !== "hidden") checkInbox(); }, 30000);
 
 document.body.dataset.typing = "";
+refreshWelcome();
 deliver();
 render(); renderBanner(); route();
 })();
