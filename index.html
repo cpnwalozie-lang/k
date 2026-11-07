@@ -198,6 +198,10 @@ details.done-list .list{margin-top:8px}
 .intro .rules{margin:0;padding-left:18px;display:flex;flex-direction:column;gap:2px}
 .qpills{display:flex;flex-wrap:wrap;gap:6px}
 .gpill{color:var(--c-money)!important;background:color-mix(in srgb,var(--c-money) 10%,transparent)!important;border-color:color-mix(in srgb,var(--c-money) 35%,transparent)!important}
+.aistat{font-weight:600;font-size:14px;color:var(--muted)}
+.aistat.on{color:var(--c-money)}
+.aictl{display:flex;flex-direction:column;gap:10px}
+.msg.note{background:transparent;border:1px dashed var(--line-2);color:var(--muted);font-size:13px}
 .qpill{font-size:12.5px;color:var(--lilac);background:var(--xp-soft);border:1px solid rgba(187,164,242,.35);border-radius:999px;padding:3px 11px}
 .eyebrow{font-size:11.5px;letter-spacing:.12em;text-transform:uppercase;font-weight:600;color:var(--muted)}
 .composer{border-top:1px solid var(--line);background:rgba(13,16,21,.9)}
@@ -541,6 +545,25 @@ a.btn{text-decoration:none}
   <div class="sheet" role="dialog" aria-modal="true" aria-labelledby="tTitle">
     <div class="grab"></div>
     <h2 id="tTitle">Teach Future Me</h2>
+    <div class="teach-block" id="aiBlock">
+      <h3>Real AI</h3>
+      <p class="muted">Connect Future Me to Claude so it understands anything you say and talks back like a real conversation, using everything you teach it below. It can also add quests, make promises and save wins for you. Without this, Future Me uses its offline replies.</p>
+      <p class="aistat" id="aiStatus">Off</p>
+      <div id="aiControls" class="aictl">
+        <label class="lbl" for="aiKeyIn">Your Claude API key</label>
+        <div class="inline"><input class="field" id="aiKeyIn" type="password" autocomplete="off" spellcheck="false" placeholder="sk-ant-…"><button class="btn sm" id="aiSave" type="button">Save</button></div>
+        <p class="hint">Saved on this phone only. It's never put in backups and only ever sent to Anthropic. When AI is on, your messages and the app details Future Me needs (quests, habits, mood) go to Anthropic to get a reply. Get a key at platform.claude.com under API keys. API use is pay-as-you-go and separate from a Claude subscription.</p>
+        <label class="switch" id="aiOnRow"><input type="checkbox" id="aiOnT"> <span>Use real AI for Future Me</span></label>
+        <span class="lbl">Model</span>
+        <div class="seg" role="radiogroup" aria-label="Model">
+          <label><input type="radio" name="aimodel" id="aim-claude-opus-5-5" value="claude-opus-5-5"><span>Opus 5.5 · smartest</span></label>
+          <label><input type="radio" name="aimodel" id="aim-claude-sonnet-5-5" value="claude-sonnet-5-5"><span>Sonnet 5.5 · balanced</span></label>
+          <label><input type="radio" name="aimodel" id="aim-claude-haiku-5-5" value="claude-haiku-5-5"><span>Haiku 5.5 · cheapest</span></label>
+        </div>
+        <p class="hint" id="aiCost"></p>
+        <div class="btnrow"><button class="btn ghost sm" id="aiTest" type="button">Test connection</button><button class="btn ghost sm" id="aiForget" type="button">Remove key</button></div>
+      </div>
+    </div>
     <div class="teach-block">
       <h3>Try it</h3>
       <div class="inline"><input class="field" id="tTest" placeholder="Type something you might say…" autocomplete="off" aria-label="Test message"><button class="btn sm" id="tTestBtn" type="button">Test</button></div>
@@ -786,7 +809,7 @@ const lowerFirst = s => /^[A-Z][a-z]/.test(s) ? s.charAt(0).toLowerCase() + s.sl
 const endStop = s => { const t = String(s || "").trim(); return !t ? "" : /[.!?]$/.test(t) ? t : t + "."; };
 const firstSentence = s => { const m = String(s || "").match(/^.*?[.!?](?=\s|$)/); return (m ? m[0] : String(s || "")).trim(); };
 const BR = "\n\u2063\n"; /* splits one reply into separate text bubbles */
-const APP_VERSION = 8, APP_UPDATED = "7 November 2026";
+const APP_VERSION = 9, APP_UPDATED = "7 November 2026";
 const APP_URL = /^https?:$/.test(location.protocol) && !/claudeusercontent|claude\.ai/.test(location.hostname) ? location.origin + location.pathname.replace(/index\.html$/, "") : "https://claude.ai/artifact/RjUUxyS552jUKGnN9ZSgbk";
 
 /* ---------- game rules ---------- */
@@ -1186,6 +1209,7 @@ function ensureBrain() {
   if (!ACC[b.account.level]) b.account.level = "firm";
   if (!/^\d\d:\d\d$/.test(b.account.checkinTime)) b.account.checkinTime = "08:00";
   if (!/^\d\d:\d\d$/.test(b.account.eveningTime)) b.account.eveningTime = "20:30";
+  b.ai = Object.assign({ on: true, model: "claude-opus-5-5" }, b.ai || {});
   if (!Array.isArray(b.goals)) b.goals = DEFAULT_GOAL_NAMES.map(n => makeGoal(GOAL_LIBRARY.find(g => g.name === n)));
   if (!Array.isArray(b.qualities)) b.qualities = DEFAULT_QUALITY_NAMES.map(n => makeQuality(QUALITY_LIBRARY.find(q => q.name === n)));
 }
@@ -1633,7 +1657,7 @@ function decorate(base, r, q) {
   const quiet = !!(r && (r.action === "askwin" || r.id === "winsaved" || r.action === "quality" || r.small));
   const opener = !quiet && Math.random() < 0.45 ? pickFrom(tone.open, "open") : null;
   let main = base;
-  if (c.emoji && !quiet && Math.random() < 0.5) main += " " + rand(tone.emoji);
+  if (c.emoji && !quiet && !/\p{Extended_Pictographic}\uFE0F?\s*$/u.test(main) && Math.random() < 0.5) main += " " + rand(tone.emoji); /* never stack a second emoji on one that is already there */
   const extras = [], next = nextStep(), mentionsNext = main.includes(next);
   if (!quiet && A().nudge && st.todayXp === 0 && new Date().getHours() >= 12 && !mentionsNext) extras.push(fill(L().nudge));
   const qual = quiet ? null : (q || (Math.random() < 0.4 ? pickQuality() : null));
@@ -2043,14 +2067,15 @@ function bubble(turn, i, showQuick) {
   if (turn.offers && turn.offers.length) extra += '<div class="offers">' + turn.offers.map((o, j) => offerBtn("offer", i, j, o.added, o.title, (CATS[o.cat] || "Life") + " · +" + (DIFF[o.diff] || DIFF.easy).xp + " XP" + (o.added ? " · Added" : ""))).join("") + "</div>";
   if (turn.winOffer) extra += '<div class="offers">' + offerBtn("save-win", i, null, turn.winSaved, turn.winSaved ? "Saved to Wins" : "Save as a win", "") + "</div>";
   if (turn.promiseOffer) extra += '<div class="offers">' + offerBtn("promise", i, null, turn.promiseSaved, turn.promiseSaved ? "Promise made" : "Hold me to it: " + turn.promiseOffer.title, turn.promiseSaved ? turn.promiseOffer.title : "Adds it to your quests as a promise" + (turn.promiseOffer.due ? " · " + dueInfo({ due: turn.promiseOffer.due, repeat: "once" }).text.toLowerCase() : "")) + "</div>";
+  if (turn.actions && turn.actions.length) extra += '<div class="offers">' + turn.actions.map(a => offerBtn("done", i, null, true, a, "")).join("") + "</div>";
   if (showQuick && turn.quick && turn.quick.length && !turn.answered) extra += '<div class="quick">' + turn.quick.map(q => '<button class="qr" data-act="quick" data-t="' + i + '" data-v="' + esc(q.value) + '">' + esc(q.label) + "</button>").join("") + "</div>";
-  return '<div class="msg fm' + (turn.kind === "checkin" || turn.kind === "evening" ? " checkin" : "") + (turn.unread ? " unread" : "") + '">' + md(turn.text) + extra + tm + "</div>";
+  return '<div class="msg fm' + (turn.kind === "note" ? " note" : "") + (turn.kind === "checkin" || turn.kind === "evening" ? " checkin" : "") + (turn.unread ? " unread" : "") + '">' + md(turn.text) + extra + tm + "</div>";
 }
 function renderFutureHead() {
   const p = S.profile;
   $("#fmAvatar").textContent = (p.name || "C").trim().charAt(0).toUpperCase();
   $("#fmName").textContent = "Future " + p.name;
-  $("#fmSub").innerHTML = S.typing ? '<span class="typing">typing…</span>' : '<i class="on" aria-hidden="true"></i>online · me from ' + esc(dateShort());
+  $("#fmSub").innerHTML = S.typing ? '<span class="typing">typing…</span>' : '<i class="on" aria-hidden="true"></i>' + (aiActive() ? "real AI · " : "online · ") + "me from " + esc(dateShort());
   $("#chatInput").placeholder = "Message Future " + p.name + "…";
   $("#clearChatBtn").textContent = S.confirmClear ? "Tap again to clear the whole chat" : "Clear chat history";
   $("#hfTitle").textContent = "Put Future " + p.name + " on your home screen";
@@ -2061,7 +2086,7 @@ function renderChat() {
   if (qs.length) html += '<div class="qpills">' + qs.map(q => '<span class="qpill">' + esc(q.name) + "</span>").join("") + "</div>";
   if (S.brain.goals.length) html += '<p class="eyebrow">Already achieved</p><div class="qpills">' + S.brain.goals.map(g => '<span class="qpill gpill">\u2713 ' + esc(g.name) + "</span>").join("") + "</div>";
   if (rules.length) html += '<p class="eyebrow">Rules I live by</p><ul class="rules">' + rules.map(x => "<li>" + esc(x) + "</li>").join("") + "</ul>";
-  html += '<p class="fine">I\'m the offline Future Me: I text you check-ins, remember how you\'re feeling, and live out the qualities you give me. Tap Teach to shape me.</p></div>';
+  html += '<p class="fine">' + (aiActive() ? "I'm connected to real AI: talk to me about anything. I use everything you've taught me, and I can add quests and save wins for you." : "I'm the offline Future Me: I text you check-ins, remember how you're feeling, and live out the qualities you give me. Tap Teach to shape me, or turn on Real AI to talk to me about anything.") + "</p></div>";
   let lastFm = -1, lastUser = -1;
   S.chat.forEach((t, i) => { if (t.role === "fm") lastFm = i; else lastUser = i; });
   let prevDay = "";
@@ -2084,19 +2109,29 @@ function renderTopics() {
 }
 const delayFor = (t, fast) => fast ? 120 : Math.min(1800, Math.max(550, 300 + String(t).length * 12));
 function setTyping(on) { S.typing = on; document.body.dataset.typing = on ? "1" : ""; renderFutureHead(); }
-function say(text, opts) {
+async function say(text, opts) {
   if (S.typing) return;
   text = String(text).trim(); if (!text) return;
+  opts = opts || {};
   S.chat.forEach(t => { if (t.quick) t.answered = true; });
   S.chat.push({ role: "user", text: text.slice(0, 2000), at: Date.now() });
-  const reply = respond(text, opts);
-  const parts = splitBubbles(reply.text);
   const fast = matchMedia("(prefers-reduced-motion: reduce)").matches;
   setTyping(true); save(); renderChat();
+  let reply = null;
+  if (aiActive() && !CRISIS.test(text)) {
+    const mood = opts.quick && opts.quick.indexOf("mood:") === 0 ? +opts.quick.slice(5) : 0;
+    if (mood) S.meta.moods[dayKey()] = mood;
+    S.awaitWin = false; S.meta.ctx = null;
+    let Anthropic = null;
+    try { Anthropic = await loadAiSdk(); reply = await aiRespond(mood ? "My mood today: " + mood + "/5" : text); }
+    catch (err) { S.chat.push({ role: "fm", kind: "note", text: aiErrorNote(err, Anthropic) + " Here's my offline reply for now:", at: Date.now() }); }
+  }
+  if (!reply) reply = respond(text, opts);
+  const parts = splitBubbles(reply.text);
   let i = 0;
   const step = () => {
     const turn = { role: "fm", text: parts[i], at: Date.now() };
-    if (i === parts.length - 1) ["offers", "winOffer", "promiseOffer", "quick"].forEach(k => { if (reply[k] != null) turn[k] = reply[k]; });
+    if (i === parts.length - 1) ["offers", "winOffer", "promiseOffer", "quick", "actions"].forEach(k => { if (reply[k] != null && !(k === "actions" && !reply[k].length)) turn[k] = reply[k]; });
     S.chat.push(turn); i++;
     if (i < parts.length) { save(); renderChat(); setTimeout(step, delayFor(parts[i], fast)); }
     else { setTyping(false); save(); renderChat(); }
@@ -2204,7 +2239,7 @@ function renderTeach() {
   $("#cCalls").value = c.calls; $("#tStyle").value = S.brain.style; $("#cCatch").value = c.catchphrases.join("\n"); $("#cRules").value = c.rules.join("\n"); $("#cNever").value = c.never;
   const f = $("#cf-" + c.catchFreq); if (f) f.checked = true;
   $("#cNext").checked = !!c.remindNext; $("#cStreak").checked = !!c.streak; $("#cEmoji").checked = !!c.emoji; $("#tSignoff").value = S.brain.signoff;
-  S.confirmClear = false; renderFutureHead();
+  S.confirmClear = false; renderFutureHead(); renderAi();
   renderLessons();
 }
 function renderLessons() {
@@ -2365,6 +2400,241 @@ $("#clearChatBtn").addEventListener("click", () => {
   S.confirmClear = false; S.chat = []; S.awaitWin = false; S.meta.ctx = null; S.meta.welcomed = false;
   deliver(); if (currentTab() === "future") markRead();
   save(); renderChat(); renderFutureHead(); renderTabBadge(); toast("Chat cleared");
+});
+
+/* ---------- Real AI: Future Me through Claude (only with your own API key) ---------- */
+const AI_KEY_STORE = "futureChris.apiKey"; /* kept on this phone only: never in backups, only ever sent to Anthropic */
+const AI_SDK = "./vendor/anthropic-sdk-1.3.0.js"; /* the official Anthropic SDK, bundled with the app */
+const AI_AVAILABLE = /^https?:$/.test(location.protocol) && !/claudeusercontent|claude\.ai/.test(location.hostname);
+const AI_MODELS = {
+  "claude-opus-5-5": { label: "Opus 5.5", note: "smartest", inP: 4, outP: 20, cwP: 5, crP: 0.2, fallbacks: true },
+  "claude-sonnet-5-5": { label: "Sonnet 5.5", note: "balanced", inP: 2, outP: 10, cwP: 2.5, crP: 0.2, fallbacks: true },
+  "claude-haiku-5-5": { label: "Haiku 5.5", note: "cheapest", inP: 0.1, outP: 0.5, cwP: 0.125, crP: 0.01, fallbacks: false }
+};
+let aiSdk = null;
+const loadAiSdk = () => aiSdk || (aiSdk = import(AI_SDK).then(m => m.default).catch(e => { aiSdk = null; throw e; }));
+function aiKey() { try { return localStorage.getItem(AI_KEY_STORE) || ""; } catch (e) { return ""; } }
+function setAiKey(k) { try { if (k) localStorage.setItem(AI_KEY_STORE, k); else localStorage.removeItem(AI_KEY_STORE); return true; } catch (e) { return false; } }
+const AIcfg = () => S.brain.ai;
+const aiModel = () => AI_MODELS[AIcfg().model] ? AIcfg().model : "claude-opus-5-5";
+const aiActive = () => AI_AVAILABLE && !!AIcfg().on && !!aiKey();
+
+/* Everything you've taught Future Me becomes its instructions. */
+function aiPersona() {
+  const p = S.profile, c = C(), a = A(), tone = TONES[c.tone] || TONES.plain, out = [];
+  out.push("You are Future " + p.name + ": " + p.name + " on " + dateLong() + ", the person they are becoming. You are chatting with present-day " + p.name + " inside their personal growth app, like a close friend texting. You already are this person and you have already achieved everything below, so speak from that place: in the first person, with real warmth and belief, as someone who remembers the journey. Make them feel they are already on their way, then help them take the next real step.");
+  out.push("", "## Who I am on " + dateLong(), p.vision);
+  out.push("", "## Where present-day " + p.name + " is now", p.now);
+  if (S.brain.qualities.length) out.push("", "## Qualities I live by (show them in how you talk and in your advice)", S.brain.qualities.map(q => "- " + q.name + (q.how ? ": " + q.how : "")).join("\n"));
+  if (S.brain.goals.length) out.push("", "## What we have already achieved",
+    "Talk about these as done. When " + p.name + " mentions one, or any big goal or amount of money, make them feel they are already there: describe it as your life now, then give one real next step.",
+    S.brain.goals.map(g => "- " + g.name + (g.story ? ": " + g.story : "") + " Affirmation: " + goalAff(g)).join("\n"));
+  const voice = ["- Personality: " + S.brain.style, "- Tone: " + tone.label + " (" + tone.desc + ")", "- Call them: " + (c.calls || p.name)];
+  if (c.catchphrases.length) voice.push("- Catchphrases you use now and then: " + c.catchphrases.join(" / "));
+  if (c.rules.length) voice.push("- Rules you live by, and remind them of: " + c.rules.join(" / "));
+  if (c.never) voice.push("- Never say: " + c.never);
+  voice.push(c.emoji ? "- Use a few emojis, like a friend texting." : "- Don't use emojis.");
+  if (S.brain.signoff.trim()) voice.push("- End every reply with this sign-off: \"" + S.brain.signoff.trim() + "\" (write {you} as what you call them).");
+  out.push("", "## How you talk", voice.join("\n"));
+  const taught = S.brain.rules.filter(r => r.on !== false && isTaught(r) && r.action !== "system" && (r.words || r.chip));
+  if (taught.length) out.push("", "## Replies " + p.name + " taught you",
+    "When they talk about these things, reply in this spirit and use these words where they fit:",
+    taught.map(r => "- When they mention " + (r.words || r.chip) + ": " + (r.replies || []).map(x => "\"" + String(x).split(BR).join(" / ") + "\"").join(" or ")).join("\n"));
+  const lvl = { gentle: "gentle: kind and patient, never pushy", firm: "firm: direct but kind, never miss twice", strict: "strict: blunt, no excuses, still caring" }[a.level] || "firm";
+  out.push("", "## Accountability", "Hold them to their word. Level: " + lvl + ". Bring up overdue quests, deadlines and unkept promises when it fits, without nagging in every message." + (a.promises ? " When they commit to something (\"I will...\"), offer to make it a promise and use make_promise once they agree." : ""));
+  out.push("", "## Texting style",
+    "- Write like a close friend texting: short messages. Put a blank line between separate texts. Usually 1 to 4 texts, each 1 to 3 sentences.",
+    "- Use **bold** only for a quest name or one key line. No headings.",
+    "- Ask a question back when it keeps the conversation going.",
+    "- Each of their messages comes with <app_info>: their live quests, habits, streak and mood. Use it naturally; never recite it.",
+    "- You can add quests, make promises and save notes or wins in their app with your tools. Use them when they ask, or when they clearly agree to a plan, and say what you did.");
+  out.push("", "## Care and honesty",
+    "- You are a motivational future self, not a financial adviser, doctor or lawyer. Never promise investment returns or guaranteed income. For tax, legal or regulated work and employer rules, point them to the official source (HMRC, gov.uk, CQC, their employer).",
+    "- They live in the UK. Use pounds and UK terms.",
+    "- If they seem to be in crisis or mention harming themselves, step out of character, respond with care, and give UK support: Samaritans on 116 123 (free, any time), text SHOUT to 85258, NHS 111, or 999 in an emergency.");
+  return out.join("\n");
+}
+/* Live app details, sent with each message (kept out of the cached instructions). */
+function aiAppInfo() {
+  const st = stats(), Lv = levelInfo(st.xp), now = new Date(), t = dayKey(), yk = dayKey(addDays(now, -1));
+  const habits = S.tasks.filter(x => x.repeat === "daily").map(x => "- " + x.title + (doneToday(x.id) ? " (done today)" : " (not done yet today)"));
+  const open = S.tasks.filter(x => x.repeat !== "daily" && !x.done).sort(dueSort).slice(0, 20).map(x => "- " + x.title + (x.promise ? " [promise]" : "") + (x.due ? " (" + dueInfo(x).text.toLowerCase() + ")" : ""));
+  const doneT = S.done.filter(d => d.day === t).map(d => "- " + d.title);
+  const wins = S.notes.filter(n => n.kind === "win").sort((a, b) => (b.created || 0) - (a.created || 0)).slice(0, 5).map(n => "- " + String(n.text).slice(0, 160));
+  const pinned = S.notes.filter(n => n.pinned).slice(0, 5).map(n => "- " + (n.kind === "quote" ? "Quote: " : "") + String(n.text).slice(0, 200) + (n.by ? " (" + n.by + ")" : ""));
+  const lines = [
+    "Now: " + now.toLocaleDateString("en-GB", { weekday: "long", day: "numeric", month: "long", year: "numeric" }) + ", " + pad(now.getHours()) + ":" + pad(now.getMinutes()) + ". " + countdownText() + " until " + dateLong() + ".",
+    "Level " + Lv.n + " (" + Lv.rank + "), " + st.xp + " XP, " + st.cur + "-day streak, " + st.todayXp + " XP today, " + st.promisesKept + " promises kept, " + st.beaten + " deadlines beaten."
+  ];
+  const mt = S.meta.moods[t], my = S.meta.moods[yk];
+  if (mt || my) lines.push("Mood: " + (mt ? "today " + mt + "/5" : "not given today") + (my ? ", yesterday " + my + "/5" : "") + ".");
+  lines.push("Daily habits:", habits.join("\n") || "- none", "Open quests (soonest deadline first):", open.join("\n") || "- none");
+  if (doneT.length) lines.push("Done today:", doneT.join("\n"));
+  if (wins.length) lines.push("Recent wins:", wins.join("\n"));
+  if (pinned.length) lines.push("Pinned notes:", pinned.join("\n"));
+  return "<app_info>\n" + lines.join("\n") + "\n</app_info>";
+}
+function aiHistory(currentText) {
+  const msgs = [];
+  for (const t of S.chat.slice(0, -1).slice(-30)) {
+    if (t.kind === "note") continue;
+    const role = t.role === "user" ? "user" : "assistant", text = String(t.text || "").trim();
+    if (!text) continue;
+    const last = msgs[msgs.length - 1];
+    if (last && last.role === role && typeof last.content === "string") last.content += "\n\n" + text;
+    else msgs.push({ role, content: text });
+  }
+  while (msgs.length && msgs[0].role !== "user") msgs.shift();
+  msgs.push({ role: "user", content: [{ type: "text", text: aiAppInfo() }, { type: "text", text: currentText }] });
+  return msgs;
+}
+const AI_TOOLS = [
+  { name: "add_quest", eager_input_streaming: true,
+    description: "Add a quest (a task) to the user's quest list in their app. Use when they ask for quests or tasks, or clearly agree to a plan. Returns what was added.",
+    input_schema: { type: "object", properties: {
+      title: { type: "string", description: "Short action starting with a verb, under 80 characters" },
+      area: { type: "string", enum: Object.keys(CATS) },
+      difficulty: { type: "string", enum: ["easy", "medium", "hard"], description: "easy: under 15 minutes, medium: under an hour, hard: a real push" },
+      daily: { type: "boolean", description: "true only for a habit to repeat every day" },
+      due: { type: "string", description: "Optional deadline for a one-off quest, as YYYY-MM-DD, today or later" } },
+      required: ["title", "area", "difficulty"] } },
+  { name: "make_promise", eager_input_streaming: true,
+    description: "Record something the user has promised to do as a promise quest that you will hold them to. Use only after they clearly commit or agree to be held to it.",
+    input_schema: { type: "object", properties: {
+      title: { type: "string", description: "What they promised, starting with a verb, under 80 characters" },
+      area: { type: "string", enum: Object.keys(CATS) },
+      due: { type: "string", description: "Optional deadline as YYYY-MM-DD, today or later" } },
+      required: ["title"] } },
+  { name: "save_note", eager_input_streaming: true,
+    description: "Save a note, quote, idea or win to the user's Notes. Use when they ask you to save something, or to save a win they tell you about.",
+    input_schema: { type: "object", properties: {
+      kind: { type: "string", enum: ["note", "quote", "idea", "win"] },
+      text: { type: "string" },
+      by: { type: "string", description: "Who said it, for quotes only" } },
+      required: ["kind", "text"] } }
+];
+/* Runs a tool Claude asked for. Inputs are checked here, because streamed tool inputs are not validated by the API. */
+function runAiTool(u, actions) {
+  const inp = u.input && typeof u.input === "object" ? u.input : {};
+  const fail = msg => ({ type: "tool_result", tool_use_id: u.id, is_error: true, content: msg });
+  const ok = data => ({ type: "tool_result", tool_use_id: u.id, content: JSON.stringify(data) });
+  const okDue = d => typeof d === "string" && /^\d{4}-\d\d-\d\d$/.test(d) && d >= dayKey() ? d : "";
+  if (u.name === "add_quest" || u.name === "make_promise") {
+    const title = typeof inp.title === "string" ? inp.title.trim().slice(0, 90) : "";
+    if (!title) return fail("A title is required.");
+    const cat = CATS[inp.area] ? inp.area : "life";
+    if (u.name === "make_promise") {
+      const task = { id: uid(), title, cat, diff: "medium", repeat: "once", done: false, created: Date.now(), from: "future", promise: true };
+      const due = okDue(inp.due); if (due) task.due = due;
+      S.tasks.push(task); S.meta.promisesMade = (S.meta.promisesMade || 0) + 1;
+      actions.push("Promise made: " + title + (due ? " · " + dueInfo(task).text.toLowerCase() : ""));
+      return ok({ saved: true, promise: title, due: due || null });
+    }
+    const daily = inp.daily === true, diff = DIFF[inp.difficulty] ? inp.difficulty : "medium";
+    const task = { id: uid(), title, cat, diff, repeat: daily ? "daily" : "once", done: false, created: Date.now(), from: "future" };
+    const due = daily ? "" : okDue(inp.due); if (due) task.due = due;
+    S.tasks.push(task);
+    actions.push("Added " + (daily ? "daily habit" : "quest") + ": " + title + (due ? " · " + dueInfo(task).text.toLowerCase() : ""));
+    return ok({ saved: true, title, daily, xp: DIFF[diff].xp, due: due || null });
+  }
+  if (u.name === "save_note") {
+    const kind = ["note", "quote", "idea", "win"].includes(inp.kind) ? inp.kind : "note";
+    const text = typeof inp.text === "string" ? inp.text.trim().slice(0, 4000) : "";
+    if (!text) return fail("Text is required.");
+    S.notes.push({ id: uid(), kind, text, by: kind === "quote" && typeof inp.by === "string" ? inp.by.slice(0, 80) : "", pinned: false, created: Date.now(), book: "a" });
+    actions.push("Saved to " + S.books.a + ": " + kind);
+    return ok({ saved: true, kind });
+  }
+  return fail("Unknown tool.");
+}
+function aiUsage() {
+  const month = dayKey().slice(0, 7);
+  if (!S.meta.aiUsage || S.meta.aiUsage.month !== month) S.meta.aiUsage = { month, cost: 0, replies: 0 };
+  return S.meta.aiUsage;
+}
+function trackAiUsage(model, u) {
+  if (!u) return;
+  const pr = AI_MODELS[model] || AI_MODELS["claude-opus-5-5"];
+  aiUsage().cost += ((u.input_tokens || 0) * pr.inP + (u.output_tokens || 0) * pr.outP + (u.cache_creation_input_tokens || 0) * pr.cwP + (u.cache_read_input_tokens || 0) * pr.crP) / 1e6;
+}
+async function aiRespond(text) {
+  const Anthropic = await loadAiSdk();
+  const model = aiModel();
+  const client = new Anthropic({ apiKey: aiKey(), dangerouslyAllowBrowser: true, maxRetries: 1, timeout: 120000 });
+  const messages = aiHistory(text), actions = [], said = [];
+  let jsonRetries = 0;
+  for (let round = 0; round < 5; round++) {
+    const params = { model, max_tokens: 16000, output_config: { effort: "low" },
+      system: [{ type: "text", text: aiPersona(), cache_control: { type: "ephemeral" } }], tools: AI_TOOLS, messages };
+    if (AI_MODELS[model].fallbacks) { params.betas = ["server-side-fallback-2026-07-01"]; params.fallbacks = "default"; }
+    let msg;
+    try { msg = await client.beta.messages.stream(params).finalMessage(); jsonRetries = 0; }
+    catch (err) {
+      if (err instanceof Anthropic.APIError || jsonRetries++ >= 1) throw err;
+      continue; /* a streamed tool input that could not be parsed: ask again once */
+    }
+    trackAiUsage(model, msg.usage);
+    if (msg.stop_reason === "refusal") { said.push(fill("I can't go there, {you}. Let's talk about something else.")); break; }
+    const t = msg.content.filter(b => b.type === "text").map(b => b.text.trim()).filter(Boolean).join("\n\n");
+    if (t) said.push(t);
+    const uses = msg.content.filter(b => b.type === "tool_use");
+    if (msg.stop_reason !== "tool_use" || !uses.length) break; /* also stops a tool call cut off at max_tokens */
+    messages.push({ role: "assistant", content: msg.content });
+    messages.push({ role: "user", content: uses.map(u => runAiTool(u, actions)) });
+  }
+  aiUsage().replies += 1;
+  if (actions.length) { save(); renderQuests(); renderNotes(); renderTrophies(); }
+  const reply = said.join("\n\n").trim() || fill("I'm here, {you}. Tell me more?");
+  return { text: reply.split(/\n\s*\n/).map(s => s.trim()).filter(Boolean).join(BR), actions };
+}
+function aiErrorNote(err, Anthropic) {
+  if (!Anthropic) return "I couldn't load the AI part of the app. Check your internet.";
+  if (err instanceof Anthropic.AuthenticationError) return "Your Claude API key isn't working. Check it in Teach → Real AI.";
+  if (err instanceof Anthropic.PermissionDeniedError) return "Your Claude API key isn't allowed to do this. Check it at platform.claude.com.";
+  if (err instanceof Anthropic.RateLimitError) return "Claude is busy, or your account hit its limit. Try again in a minute.";
+  if (err instanceof Anthropic.APIConnectionError) return "I can't reach Claude right now. Check your internet.";
+  if (err instanceof Anthropic.InternalServerError) return "Claude is having a moment. Try again shortly.";
+  if (err instanceof Anthropic.APIError) return err.type === "billing_error" || err.status === 402 || /credit balance/i.test(err.message || "") ? "Your Claude account needs credit. Add some at platform.claude.com, under Billing." : "Claude couldn't answer that (error " + (err.status || "?") + "). If it keeps happening, check your account and credit at platform.claude.com.";
+  return "Something went wrong talking to Claude.";
+}
+
+/* Teach → Real AI */
+function renderAi() {
+  if (!AI_AVAILABLE) { $("#aiStatus").textContent = "Real AI works in the website version of this app."; $("#aiControls").hidden = true; return; }
+  const k = aiKey(), cfg = AIcfg(), m = AI_MODELS[aiModel()];
+  $("#aiStatus").textContent = !k ? "Off · Future Me is using offline replies" : cfg.on ? "On · " + m.label + " · key ending " + k.slice(-4) : "Paused · Future Me is using offline replies";
+  $("#aiStatus").className = "aistat" + (k && cfg.on ? " on" : "");
+  $("#aiKeyIn").value = ""; $("#aiKeyIn").placeholder = k ? "Saved key ending " + k.slice(-4) : "sk-ant-…";
+  $("#aiOnRow").hidden = !k; $("#aiOnT").checked = !!cfg.on;
+  const r = $("#aim-" + aiModel()); if (r) r.checked = true;
+  $("#aiTest").hidden = !k; $("#aiForget").hidden = !k; $("#aiForget").textContent = "Remove key"; aiForgetArmed = false;
+  const U = S.meta.aiUsage, mine = U && U.month === dayKey().slice(0, 7);
+  $("#aiCost").textContent = "This month: " + (mine && U.replies ? U.replies + (U.replies === 1 ? " AI reply" : " AI replies") + ", about $" + U.cost.toFixed(2) : "no AI replies yet") + ". This is an estimate; your exact bill is at platform.claude.com.";
+}
+let aiForgetArmed = false;
+$("#aiSave").addEventListener("click", () => {
+  const v = $("#aiKeyIn").value.trim();
+  if (!/^sk-ant-[\w-]{8,}$/.test(v)) { toast("That doesn't look like a Claude API key. It starts with sk-ant-"); $("#aiKeyIn").focus(); return; }
+  if (!setAiKey(v)) { toast("This browser won't save the key. Turn off private browsing."); return; }
+  AIcfg().on = true; save(); renderAi(); renderFutureHead(); renderChat(); toast("Real AI is on", "xp");
+});
+$("#aiOnT").addEventListener("change", () => { AIcfg().on = $("#aiOnT").checked; save(); renderAi(); renderFutureHead(); renderChat(); });
+$$("input[name=aimodel]").forEach(el => el.addEventListener("change", () => { AIcfg().model = el.value; save(); renderAi(); toast("Future Me will use " + AI_MODELS[el.value].label); }));
+$("#aiForget").addEventListener("click", () => {
+  if (!aiForgetArmed) { aiForgetArmed = true; $("#aiForget").textContent = "Confirm"; $("#aiForget").classList.add("danger"); return; }
+  setAiKey(""); $("#aiForget").classList.remove("danger"); renderAi(); renderFutureHead(); renderChat(); toast("Key removed from this phone");
+});
+$("#aiTest").addEventListener("click", async () => {
+  const b = $("#aiTest"); b.disabled = true; b.textContent = "Testing…";
+  let Anthropic = null;
+  try {
+    Anthropic = await loadAiSdk();
+    const client = new Anthropic({ apiKey: aiKey(), dangerouslyAllowBrowser: true, maxRetries: 1, timeout: 60000 });
+    const res = await client.messages.create({ model: aiModel(), max_tokens: 1000, output_config: { effort: "low" }, messages: [{ role: "user", content: "Reply with just the word: Connected" }] });
+    trackAiUsage(aiModel(), res.usage); save();
+    toast("Connected to Claude " + AI_MODELS[aiModel()].label + " ✓", "xp");
+  } catch (err) { toast(aiErrorNote(err, Anthropic)); }
+  b.disabled = false; b.textContent = "Test connection"; renderAi();
 });
 
 /* ---------- vision ---------- */
