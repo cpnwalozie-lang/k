@@ -317,6 +317,7 @@ textarea.mono{font-family:ui-monospace,"SF Mono",Menlo,monospace;font-size:12px;
 .field.time:disabled{opacity:.45}
 a.btn{text-decoration:none}
 .linkline{overflow-wrap:anywhere}
+.appver{text-align:center;font-size:12px}
 
 /* Sheets, overlays, toast */
 .scrim{position:fixed;inset:0;background:var(--scrim);z-index:40;display:flex;align-items:flex-end;justify-content:center;backdrop-filter:blur(3px)}
@@ -475,6 +476,7 @@ a.btn{text-decoration:none}
           <div class="btnrow"><button class="btn ghost" id="backupBtn">Back up</button><button class="btn ghost" id="restoreBtn">Restore</button></div>
         </div>
         <button class="btn ghost block" id="helpBtn2">Put this app on your home screen</button>
+        <p class="muted appver" id="appVersion"></p>
       </div>
     </section>
   </main>
@@ -741,6 +743,7 @@ const lowerFirst = s => /^[A-Z][a-z]/.test(s) ? s.charAt(0).toLowerCase() + s.sl
 const endStop = s => { const t = String(s || "").trim(); return !t ? "" : /[.!?]$/.test(t) ? t : t + "."; };
 const firstSentence = s => { const m = String(s || "").match(/^.*?[.!?](?=\s|$)/); return (m ? m[0] : String(s || "")).trim(); };
 const BR = "\n\u2063\n"; /* splits one reply into separate text bubbles */
+const APP_UPDATED = "7 November 2026";
 const APP_URL = /^https?:$/.test(location.protocol) && !/claudeusercontent|claude\.ai/.test(location.hostname) ? location.origin + location.pathname.replace(/index\.html$/, "") : "https://claude.ai/artifact/RjUUxyS552jUKGnN9ZSgbk";
 
 /* ---------- game rules ---------- */
@@ -1798,7 +1801,7 @@ function renderFutureHead() {
   const p = S.profile;
   $("#fmAvatar").textContent = (p.name || "C").trim().charAt(0).toUpperCase();
   $("#fmName").textContent = "Future " + p.name;
-  $("#fmSub").innerHTML = S.typing ? '<span class="typing">typing…</span>' : '<i class="on" aria-hidden="true"></i>online · ' + esc((TONES[C().tone] || TONES.plain).label.toLowerCase()) + " from " + esc(dateShort());
+  $("#fmSub").innerHTML = S.typing ? '<span class="typing">typing…</span>' : '<i class="on" aria-hidden="true"></i>online · me from ' + esc(dateShort());
   $("#chatInput").placeholder = "Message Future " + p.name + "…";
   $("#clearChatBtn").textContent = S.confirmClear ? "Tap again to clear the whole chat" : "Clear chat history";
   $("#hfTitle").textContent = "Put Future " + p.name + " on your home screen";
@@ -2162,6 +2165,7 @@ $("#rsGo").addEventListener("click", () => {
 });
 $("#helpBtn").addEventListener("click", () => openSheet("#sheetHelp"));
 $("#helpBtn2").addEventListener("click", () => openSheet("#sheetHelp"));
+$("#appVersion").textContent = "App updated " + APP_UPDATED;
 
 /* ---------- routing ---------- */
 const TABS = { quests: "Quests", future: "Future Me", notes: "Notes", trophies: "Trophies" };
