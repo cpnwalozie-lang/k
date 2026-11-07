@@ -133,6 +133,14 @@ p{margin:0}
 .tag{font-size:11px;color:var(--muted);border:1px solid var(--line);border-radius:999px;padding:0 8px}
 .tag.promise{color:var(--accent);border-color:rgba(141,179,230,.45)}
 .tag.mine{color:var(--accent);border-color:rgba(141,179,230,.45)}
+.due{font-size:11.5px;font-weight:600;border-radius:999px;padding:1px 9px;font-variant-numeric:tabular-nums}
+.due-today{color:var(--c-health);background:color-mix(in srgb,var(--c-health) 14%,transparent)}
+.due-soon{color:var(--accent);background:var(--accent-soft)}
+.due-later{color:var(--muted);border:1px solid var(--line)}
+.due-overdue{color:var(--danger);background:rgba(229,138,138,.14)}
+.due-ontime{color:var(--c-money);background:color-mix(in srgb,var(--c-money) 12%,transparent)}
+.due-late{color:var(--muted);border:1px solid var(--line)}
+.task.overdue{box-shadow:inset 3px 0 0 var(--danger)}
 .more{width:32px;height:32px;border-radius:50%;border:0;background:none;color:var(--muted);display:grid;place-items:center}
 .more svg{width:18px;height:18px}
 .confirm-row{display:flex;gap:6px}
@@ -243,6 +251,7 @@ textarea.mono{font-family:ui-monospace,"SF Mono",Menlo,monospace;font-size:12px;
 
 /* Trophies */
 .stats{display:grid;grid-template-columns:repeat(2,1fr);gap:10px}
+.stat strong{overflow-wrap:anywhere}
 .stat{padding:14px 16px}
 .stat small{display:block;font-size:12px;color:var(--muted)}
 .stat strong{font-family:var(--f-display);font-weight:400;font-size:32px;line-height:1.1}
@@ -493,7 +502,7 @@ a.btn{text-decoration:none}
 
 <!-- New quest sheet -->
 <div class="scrim" id="sheetQuest" hidden>
-  <form class="sheet" id="questForm" role="dialog" aria-modal="true" aria-labelledby="qfTitle">
+  <form class="sheet" id="questForm" novalidate role="dialog" aria-modal="true" aria-labelledby="qfTitle">
     <div class="grab"></div>
     <h2 id="qfTitle">New quest</h2>
     <div class="row"><label class="lbl" for="qTitle">What will you do?</label><input class="field" id="qTitle" maxlength="90" placeholder="e.g. Film a 60-second Reel" autocomplete="off"></div>
@@ -511,7 +520,18 @@ a.btn{text-decoration:none}
         <label><input type="radio" name="qrep" id="qr-daily" value="daily"><span>Daily habit</span></label>
       </div>
     </div>
-    <div class="actions"><button type="button" class="btn ghost" data-close>Cancel</button><button type="submit" class="btn">Add quest</button></div>
+    <div class="row" id="qDueRow"><span class="lbl">Deadline</span>
+      <div class="seg" role="radiogroup" aria-label="Deadline">
+        <label><input type="radio" name="qdue" id="qdue-none" value="none" checked><span>None</span></label>
+        <label><input type="radio" name="qdue" id="qdue-today" value="today"><span>Today</span></label>
+        <label><input type="radio" name="qdue" id="qdue-tomorrow" value="tomorrow"><span>Tomorrow</span></label>
+        <label><input type="radio" name="qdue" id="qdue-week" value="week"><span>This week</span></label>
+        <label><input type="radio" name="qdue" id="qdue-date" value="date"><span>Pick a date</span></label>
+      </div>
+      <input class="field" type="date" id="qDueDate" aria-label="Deadline date" hidden>
+      <p class="hint">Finish on or before the deadline for <strong>+10 bonus XP</strong>. Future Me will remind you.</p>
+    </div>
+    <div class="actions"><button type="button" class="btn ghost" id="qDel" hidden>Delete</button><button type="button" class="btn ghost" data-close>Cancel</button><button type="submit" class="btn" id="qSubmit">Add quest</button></div>
   </form>
 </div>
 
@@ -743,7 +763,7 @@ const lowerFirst = s => /^[A-Z][a-z]/.test(s) ? s.charAt(0).toLowerCase() + s.sl
 const endStop = s => { const t = String(s || "").trim(); return !t ? "" : /[.!?]$/.test(t) ? t : t + "."; };
 const firstSentence = s => { const m = String(s || "").match(/^.*?[.!?](?=\s|$)/); return (m ? m[0] : String(s || "")).trim(); };
 const BR = "\n\u2063\n"; /* splits one reply into separate text bubbles */
-const APP_UPDATED = "7 November 2026";
+const APP_VERSION = 5, APP_UPDATED = "7 November 2026";
 const APP_URL = /^https?:$/.test(location.protocol) && !/claudeusercontent|claude\.ai/.test(location.hostname) ? location.origin + location.pathname.replace(/index\.html$/, "") : "https://claude.ai/artifact/RjUUxyS552jUKGnN9ZSgbk";
 
 /* ---------- game rules ---------- */
@@ -997,7 +1017,9 @@ const ACC = {
     stale: "**{t}** has been waiting {d} days. Want to make it smaller, or let it go?",
     promiseAsk: "That sounds like a promise, {you}. Want me to hold you to it?",
     promiseMade: "Done. **{p}** is on your quest list. I'll check in on it gently.",
-    nudge: "When you're ready, start with **{next}**."
+    nudge: "When you're ready, start with **{next}**.",
+    overdue: "**{t}** slipped past its deadline. Want to give it a new date?",
+    dueToday: "Due today: **{t}**. You've got this."
   },
   firm: {
     missedYesterday: "You didn't tick anything off yesterday. One rule: never miss twice. Do one thing today.",
@@ -1006,7 +1028,9 @@ const ACC = {
     stale: "**{t}** has been on your list for {d} days. Do it, shrink it, or delete it.",
     promiseAsk: "Is that a promise, {you}? Tap below and I'll hold you to it.",
     promiseMade: "Then it's a promise 🤝 **{p}** is on your quest list, and I'll ask you about it.",
-    nudge: "Also, you haven't ticked anything off today yet. Start with **{next}**."
+    nudge: "Also, you haven't ticked anything off today yet. Start with **{next}**.",
+    overdue: "**{t}** is overdue by {d}. Get it done today, or give it a new deadline.",
+    dueToday: "Due today: **{t}**. Don't let it slide."
   },
   strict: {
     missedYesterday: "Zero quests yesterday. The person I became doesn't do zero days. Fix it today.",
@@ -1015,7 +1039,9 @@ const ACC = {
     stale: "**{t}** has been sitting there for {d} days. Excuses don't build empires. Today, it's done or deleted.",
     promiseAsk: "Say it like you mean it. Tap below and it becomes a promise. I will check.",
     promiseMade: "Locked in: **{p}**. I don't forget promises, {you}.",
-    nudge: "Still nothing ticked off today. Put the phone down and go do **{next}**."
+    nudge: "Still nothing ticked off today. Put the phone down and go do **{next}**.",
+    overdue: "**{t}** is {d} overdue. You set that deadline, not me. Today.",
+    dueToday: "**{t}** is due today. No extensions."
   }
 };
 const PROMISE_RE = /^\s*(?:(?:ok|okay|right|fine|yes|yeah)[,!.]?\s+)?(?:(?:today|tomorrow|tonight|this week)[,]?\s+)?(?:i\s+will|i'll|i\s+am\s+going\s+to|i'm\s+going\s+to|im\s+going\s+to|i'm\s+gonna|im\s+gonna|i\s+promise\s+(?:to|i'll|i\s+will|that\s+i'll|that\s+i\s+will)|i\s+commit\s+to)\s+(.+)$/i;
@@ -1030,6 +1056,9 @@ const BADGES = [
   { id: "s30", name: "Unstoppable", desc: "30-day streak", test: s => s.best >= 30 },
   { id: "promise1", name: "Promise Maker", desc: "Make your first promise", test: s => s.promisesMade >= 1 },
   { id: "word", name: "Word Is Bond", desc: "Keep 5 promises", test: s => s.promisesKept >= 5 },
+  { id: "ontime", name: "On Time", desc: "Beat your first deadline", test: s => s.beaten >= 1 },
+  { id: "ahead", name: "Ahead of Time", desc: "Beat 5 deadlines", test: s => s.beaten >= 5 },
+  { id: "clock", name: "Clockwork", desc: "Beat 20 deadlines", test: s => s.beaten >= 20 },
   { id: "money", name: "Money Moves", desc: "5 Money quests", test: s => (s.byCat.money || 0) >= 5 },
   { id: "create", name: "Creator", desc: "5 Create quests", test: s => (s.byCat.create || 0) >= 5 },
   { id: "learn", name: "Student", desc: "10 Learn quests", test: s => (s.byCat.learn || 0) >= 10 },
@@ -1059,7 +1088,7 @@ function starterData() {
   return {
     profile: clone(DEFAULT_PROFILE),
     tasks: [
-      q(1, "Add Future Chris to my home screen", "life", "easy", "once"),
+      Object.assign(q(1, "Add Future Chris to my home screen", "life", "easy", "once"), { due: dayKey() }),
       q(2, "Write my 'why' as a note and pin it", "life", "easy", "once"),
       q(3, "Ask Future Me what to focus on this week", "business", "easy", "once"),
       q(4, "30 minutes learning to code", "learn", "medium", "daily"),
@@ -1152,17 +1181,39 @@ function stats(done = S.done) {
     best = Math.max(best, run); prev = k;
   }
   const byCat = {}, byDiff = {};
-  let todayXp = 0, promisesKept = 0;
+  let todayXp = 0, promisesKept = 0, beaten = 0;
   for (const x of done) {
     byCat[x.cat] = (byCat[x.cat] || 0) + 1;
     byDiff[x.diff] = (byDiff[x.diff] || 0) + 1;
     if (x.day === today) todayXp += Number(x.xp) || 0;
     if (x.promise) promisesKept++;
+    if (x.onTime) beaten++;
   }
   return { xp, cur, best, todayXp, count: done.length, byCat, byDiff, days, promisesKept,
-    promisesMade: Math.max(S.meta.promisesMade || 0, promisesKept), qualities: S.brain.qualities.length };
+    promisesMade: Math.max(S.meta.promisesMade || 0, promisesKept), qualities: S.brain.qualities.length, beaten };
 }
 const doneToday = id => { const t = dayKey(); return S.done.some(d => d.taskId === id && d.day === t); };
+/* Deadlines: how far away (negative = overdue) and how to show it. */
+const DUE_BONUS = 10;
+const daysUntil = due => Math.round((parseDay(due) - parseDay(dayKey())) / 864e5);
+const dayWord = n => n + (n === 1 ? " day" : " days");
+const dueDate = due => parseDay(due).toLocaleDateString("en-GB", { weekday: "short", day: "numeric", month: "short" });
+const isOverdue = t => !!(t.due && t.repeat !== "daily" && !t.done && daysUntil(t.due) < 0);
+const isDueToday = t => !!(t.due && t.repeat !== "daily" && !t.done && daysUntil(t.due) === 0);
+function dueInfo(t) {
+  if (!t.due || t.repeat === "daily") return null;
+  if (t.done) {
+    const late = t.doneAt ? Math.round((parseDay(dayKey(t.doneAt)) - parseDay(t.due)) / 864e5) : 0;
+    return late <= 0 ? { cls: "ontime", text: "On time" } : { cls: "late", text: "Finished late" };
+  }
+  const d = daysUntil(t.due);
+  if (d < 0) return { cls: "overdue", text: "Overdue · " + dayWord(-d) };
+  if (d === 0) return { cls: "today", text: "Due today" };
+  if (d === 1) return { cls: "soon", text: "Due tomorrow" };
+  if (d <= 6) return { cls: "soon", text: d + " days left" };
+  return { cls: "later", text: "Due " + dueDate(t.due) };
+}
+const dueSort = (a, b) => (a.due || "9999-99-99").localeCompare(b.due || "9999-99-99") || (a.created || 0) - (b.created || 0);
 
 /* ---------- UI helpers ---------- */
 let toastTimer;
@@ -1219,23 +1270,23 @@ function taskRow(t) {
   if (t.promise) tags.push('<span class="tag promise">Promise</span>');
   else if (t.from === "future") tags.push('<span class="tag">From Future Me</span>');
   else if (t.starter) tags.push('<span class="tag">Starter</span>');
-  const confirming = S.confirmDel === "t:" + t.id;
-  const right = confirming
-    ? '<div class="confirm-row"><button class="btn danger sm" data-act="del-task" data-id="' + esc(t.id) + '">Delete</button><button class="btn ghost sm" data-act="cancel-del">Keep</button></div>'
-    : '<button class="more" data-act="ask-del" data-key="t:' + esc(t.id) + '" aria-label="Delete ' + esc(t.title) + '">' + ICON_MORE + "</button>";
-  return '<div class="task' + (isDone ? " is-done" : "") + '">' +
+  const due = dueInfo(t);
+  const dueChip = due ? '<span class="due due-' + due.cls + '">' + esc(due.text) + "</span>" : "";
+  const right = '<button class="more" data-act="edit-task" data-id="' + esc(t.id) + '" aria-label="Edit ' + esc(t.title) + '">' + ICON_MORE + "</button>";
+  return '<div class="task' + (isDone ? " is-done" : "") + (due && due.cls === "overdue" ? " overdue" : "") + '">' +
     '<button class="check" data-act="toggle" data-id="' + esc(t.id) + '" aria-pressed="' + isDone + '" aria-label="' + (isDone ? "Undo: " : "Complete: ") + esc(t.title) + '">' + ICON_CHECK + "</button>" +
-    '<div class="task-body"><div class="task-title">' + esc(t.title) + '</div><div class="meta"><span class="cat cat-' + esc(t.cat) + '">' + esc(CATS[t.cat] || "Life") + '</span><span class="xp">+' + xp + " XP</span>" + tags.join("") + "</div></div>" +
+    '<div class="task-body"><div class="task-title">' + esc(t.title) + '</div><div class="meta"><span class="cat cat-' + esc(t.cat) + '">' + esc(CATS[t.cat] || "Life") + '</span><span class="xp">+' + xp + " XP</span>" + dueChip + tags.join("") + "</div></div>" +
     right + "</div>";
 }
 function renderQuests() {
   const byCreated = (a, b) => (a.created || 0) - (b.created || 0);
   const habits = S.tasks.filter(t => t.repeat === "daily").sort(byCreated);
-  const open = S.tasks.filter(t => t.repeat !== "daily" && !t.done).sort(byCreated);
+  const open = S.tasks.filter(t => t.repeat !== "daily" && !t.done).sort(dueSort);
   const closed = S.tasks.filter(t => t.repeat !== "daily" && t.done).sort((a, b) => (b.doneAt || 0) - (a.doneAt || 0)).slice(0, 15);
   const hd = habits.filter(t => doneToday(t.id)).length;
   $("#habitCount").textContent = habits.length ? hd + " / " + habits.length + " today" : "";
-  $("#questCount").textContent = open.length ? open.length + " open" : "";
+  const od = open.filter(isOverdue).length, dt = open.filter(isDueToday).length;
+  $("#questCount").textContent = open.length ? open.length + " open" + (od ? " · " + od + " overdue" : dt ? " · " + dt + " due today" : "") : "";
   $("#habitList").innerHTML = habits.length ? '<div class="panel list">' + habits.map(taskRow).join("") + "</div>"
     : '<div class="empty"><strong>No daily habits yet.</strong> Add one with New quest and choose “Daily habit”. It resets every morning.</div>';
   $("#questList").innerHTML = open.length ? '<div class="panel list">' + open.map(taskRow).join("") + "</div>"
@@ -1285,7 +1336,7 @@ function renderNotes() {
 function renderTrophies() {
   const s = stats(), Lv = levelInfo(s.xp);
   $("#statGrid").innerHTML = [
-    ["Total XP", fmt(s.xp)], ["Quests done", fmt(s.count)], ["Current streak", s.cur + (s.cur === 1 ? " day" : " days")], ["Promises kept", fmt(s.promisesKept)]
+    ["Total XP", fmt(s.xp)], ["Quests done", fmt(s.count)], ["Current streak", dayWord(s.cur)], ["Best streak", dayWord(s.best)], ["Promises kept", fmt(s.promisesKept)], ["Deadlines beaten", fmt(s.beaten)]
   ].map(([k, v]) => '<div class="panel stat"><small>' + k + "</small><strong>" + v + "</strong></div>").join("");
   const today = new Date(); today.setHours(0, 0, 0, 0);
   const start = addDays(today, -27), lead = (start.getDay() + 6) % 7;
@@ -1316,7 +1367,46 @@ function renderTrophies() {
 /* ---------- quests ---------- */
 $("#qCats").innerHTML = catRadios("qcat", "qc-", "learn");
 $("#qlCats").innerHTML = catRadios("qlcat", "qlc-", "life");
-$("#newQuestBtn").addEventListener("click", () => { openSheet("#sheetQuest"); setTimeout(() => $("#qTitle").focus(), 60); });
+let editingTask = null, taskDelArmed = false;
+function dueFromChoice(choice) {
+  const now = new Date();
+  if (choice === "today") return dayKey(now);
+  if (choice === "tomorrow") return dayKey(addDays(now, 1));
+  if (choice === "week") return dayKey(addDays(now, 6 - (now.getDay() + 6) % 7));
+  if (choice === "date") { const v = $("#qDueDate").value; return /^\d{4}-\d\d-\d\d$/.test(v) ? v : null; }
+  return "";
+}
+function syncQuestSheet() {
+  $("#qDueRow").hidden = ($("input[name=qrep]:checked") || {}).value === "daily";
+  $("#qDueDate").hidden = ($("input[name=qdue]:checked") || {}).value !== "date";
+}
+function openQuestSheet(id) {
+  const t = id ? S.tasks.find(x => x.id === id) : null;
+  editingTask = t ? t.id : null; taskDelArmed = false;
+  $("#qfTitle").textContent = t ? "Edit quest" : "New quest";
+  $("#qSubmit").textContent = t ? "Save" : "Add quest";
+  $("#qDel").hidden = !t; $("#qDel").textContent = "Delete"; $("#qDel").classList.remove("danger");
+  $("#qTitle").value = t ? t.title : "";
+  ($("#qc-" + (t && CATS[t.cat] ? t.cat : "learn")) || {}).checked = true;
+  ($("#qd-" + (t && DIFF[t.diff] ? t.diff : "medium")) || {}).checked = true;
+  $("#qr-" + (t && t.repeat === "daily" ? "daily" : "once")).checked = true;
+  if (t && t.due) { $("#qdue-date").checked = true; $("#qDueDate").value = t.due; }
+  else { $("#qdue-none").checked = true; $("#qDueDate").value = ""; }
+  $("#qDueDate").min = dayKey();
+  syncQuestSheet(); openSheet("#sheetQuest");
+  setTimeout(() => $("#qTitle").focus(), 60);
+}
+$$("input[name=qrep], input[name=qdue]").forEach(el => el.addEventListener("change", () => {
+  syncQuestSheet();
+  if (el.name === "qdue" && el.value === "date" && !$("#qDueDate").value) $("#qDueDate").value = dayKey(addDays(new Date(), 7));
+}));
+$("#newQuestBtn").addEventListener("click", () => openQuestSheet(null));
+$("#qDel").addEventListener("click", () => {
+  if (!editingTask) return;
+  if (!taskDelArmed) { taskDelArmed = true; $("#qDel").textContent = "Confirm"; $("#qDel").classList.add("danger"); return; }
+  S.tasks = S.tasks.filter(t => t.id !== editingTask); editingTask = null;
+  $("#sheetQuest").hidden = true; save(); render(); toast("Quest deleted. Your XP stays.");
+});
 function addQuest(title, cat, diff, repeat, from, extra) {
   S.tasks.push(Object.assign({ id: uid(), title, cat: CATS[cat] ? cat : "life", diff: DIFF[diff] ? diff : "medium", repeat, done: false, created: Date.now(), from }, extra || {}));
   save(); renderQuests();
@@ -1328,9 +1418,23 @@ $("#questForm").addEventListener("submit", e => {
   const cat = ($("input[name=qcat]:checked") || {}).value || "life";
   const diff = ($("input[name=qdiff]:checked") || {}).value || "medium";
   const repeat = ($("input[name=qrep]:checked") || {}).value || "once";
+  const t = editingTask ? S.tasks.find(x => x.id === editingTask) : null;
+  let due = "";
+  if (repeat === "once") {
+    const choice = ($("input[name=qdue]:checked") || {}).value || "none";
+    due = dueFromChoice(choice);
+    if (due === null) { toast("Pick a date for the deadline."); $("#qDueDate").focus(); return; }
+    if (due && due < dayKey() && !(t && t.due === due)) { toast("Pick today or a date in the future."); $("#qDueDate").focus(); return; }
+  }
   $("#sheetQuest").hidden = true; $("#qTitle").value = "";
-  addQuest(title.slice(0, 90), cat, diff, repeat, "me");
-  toast(repeat === "daily" ? "Daily habit added" : "Quest added");
+  if (t) {
+    Object.assign(t, { title: title.slice(0, 90), cat, diff, repeat });
+    if (due) t.due = due; else delete t.due;
+    editingTask = null; save(); render(); toast("Quest updated");
+    return;
+  }
+  addQuest(title.slice(0, 90), cat, diff, repeat, "me", due ? { due } : null);
+  toast(repeat === "daily" ? "Daily habit added" : due ? "Quest added · " + dueInfo({ due, repeat: "once" }).text.toLowerCase() : "Quest added");
 });
 function toggleTask(id) {
   const t = S.tasks.find(x => x.id === id); if (!t) return;
@@ -1338,21 +1442,24 @@ function toggleTask(id) {
   const xp = (DIFF[t.diff] || DIFF.medium).xp;
   const isDone = daily ? doneToday(id) : !!t.done;
   if (isDone) {
+    const removed = S.done.filter(d => d.taskId === id && (!daily || d.day === today)).reduce((a, d) => a + (Number(d.xp) || 0), 0) || xp;
     S.done = S.done.filter(d => !(d.taskId === id && (!daily || d.day === today)));
     if (!daily) { t.done = false; t.doneAt = null; }
-    save(); render(); toast("Undone · \u2212" + xp + " XP");
+    save(); render(); toast("Undone · \u2212" + removed + " XP");
     return;
   }
   const before = stats();
-  S.done.push({ id: uid(), taskId: id, title: t.title, cat: t.cat, diff: t.diff, xp, day: today, at: Date.now(), promise: !!t.promise });
+  const onTime = !daily && !!t.due && today <= t.due;
+  const bonus = onTime ? DUE_BONUS : 0;
+  S.done.push({ id: uid(), taskId: id, title: t.title, cat: t.cat, diff: t.diff, xp: xp + bonus, bonus, onTime, day: today, at: Date.now(), promise: !!t.promise });
   if (!daily) { t.done = true; t.doneAt = Date.now(); }
   save(); render();
-  celebrate(before, stats(), xp, !!t.promise);
+  celebrate(before, stats(), xp + bonus, !!t.promise, bonus);
 }
-function celebrate(before, after, xp, promise) {
+function celebrate(before, after, xp, promise, bonus) {
   const lb = levelInfo(before.xp), la = levelInfo(after.xp);
   const fresh = BADGES.filter(b => !b.test(before) && b.test(after));
-  const head = "+" + xp + " XP" + (promise ? " · Promise kept!" : "");
+  const head = "+" + xp + " XP" + (bonus ? " · Beat the deadline!" : "") + (promise ? " · Promise kept!" : "");
   if (la.n > lb.n) {
     $("#luNum").textContent = la.n; $("#luRank").textContent = la.rank;
     $("#luNext").textContent = la.n < 10 ? "Next: " + RANKS[Math.min(la.n, 9)] + " at " + fmt(la.next) + " XP" : "Top rank. Keep stacking XP.";
@@ -1430,10 +1537,12 @@ function youName() {
 }
 function nextStep() {
   const byCreated = (a, b) => (a.created || 0) - (b.created || 0);
+  const overdue = S.tasks.filter(isOverdue).sort(dueSort)[0];
+  const today = S.tasks.filter(isDueToday).sort(dueSort)[0];
   const promise = S.tasks.filter(t => t.promise && !t.done).sort(byCreated)[0];
-  const quest = S.tasks.filter(t => t.repeat !== "daily" && !t.done).sort(byCreated)[0];
+  const quest = S.tasks.filter(t => t.repeat !== "daily" && !t.done).sort(dueSort)[0];
   const habit = S.tasks.filter(t => t.repeat === "daily" && !doneToday(t.id)).sort(byCreated)[0];
-  const t = promise || quest || habit;
+  const t = overdue || today || promise || quest || habit;
   return t ? t.title : "add one quest you can finish in 20 minutes";
 }
 function quoteLine() {
@@ -1507,6 +1616,7 @@ function reviewText(r) {
   if (doneT.length) body.push("Done today: " + doneT.length + (doneT.length === 1 ? " quest" : " quests") + " (+" + xp + " XP).\n" + doneT.slice(-4).map(d => "- " + d.title).join("\n"));
   else body.push(fill(L().zeroToday));
   if (left.length) body.push("Daily habits still to do:\n" + left.map(x => "- " + x.title).join("\n"));
+  body.push(...deadlineLines(2));
   promises.slice(0, 2).forEach(p => body.push(fill(L().promiseOpen.replace("{p}", () => p.title))));
   parts.push(body.join("\n\n"));
   parts.push(doneT.length && !left.length ? fill("That's a strong day, {you}. This is exactly how I got here.") : fill("Your next move: **{next}**."));
@@ -1521,9 +1631,15 @@ function qualityReply(q) {
   if (q.action && !have) out.offers = [{ title: q.action, cat: CATS[q.cat] ? q.cat : "life", diff: "easy", added: false }];
   return out;
 }
+function deadlineLines(max) {
+  const out = [];
+  S.tasks.filter(isOverdue).sort(dueSort).slice(0, max).forEach(t => out.push(fill(L().overdue.replace("{t}", () => t.title).replace("{d}", () => dayWord(-daysUntil(t.due))))));
+  S.tasks.filter(isDueToday).sort(dueSort).slice(0, max).forEach(t => out.push(fill(L().dueToday.replace("{t}", () => t.title))));
+  return out;
+}
 function staleQuests() {
   const now = Date.now();
-  return S.tasks.filter(t => t.repeat !== "daily" && !t.done && t.created && now - t.created > 3 * 864e5)
+  return S.tasks.filter(t => t.repeat !== "daily" && !t.done && !t.due && t.created && now - t.created > 3 * 864e5)
     .map(t => ({ t, d: Math.floor((now - t.created) / 864e5) })).sort((a, b) => b.d - a.d);
 }
 function welcomeText() {
@@ -1543,6 +1659,7 @@ function morningText() {
   else if (S.done.some(d => d.day < yk)) recap.push(fill(L().missedYesterday));
   if ((S.meta.moods[yk] || 9) <= 2) recap.push("You were feeling low yesterday. I've been thinking about you.");
   if (st.cur >= 2) recap.push("You're on a " + st.cur + "-day streak. Let's keep it alive.");
+  recap.push(...deadlineLines(2));
   S.tasks.filter(t => t.promise && !t.done).slice(0, 2).forEach(p => recap.push(fill(L().promiseOpen.replace("{p}", () => p.title))));
   if (A().stale) { const old = staleQuests().find(x => !x.t.promise); if (old) recap.push(fill(L().stale.replace("{t}", () => old.t.title).replace("{d}", () => old.d))); }
   const left = S.tasks.filter(t => t.repeat === "daily" && !doneToday(t.id)).length;
@@ -1559,9 +1676,17 @@ function eveningText() {
   if (doneT.length) body.push("You got " + doneT.length + (doneT.length === 1 ? " quest" : " quests") + " done today (+" + doneT.reduce((a, d) => a + (Number(d.xp) || 0), 0) + " XP).");
   else body.push(fill(L().zeroToday));
   if (left.length) body.push("Still to do:\n" + left.map(x => "- " + x.title).join("\n"));
+  body.push(...deadlineLines(2));
   promises.slice(0, 1).forEach(p => body.push(fill(L().promiseOpen.replace("{p}", () => p.title))));
   return [fill(pickFrom(["Hey {you}, how did today go? 🌙", "Evening {you} 🌙 Quick catch-up?"], "ge")), body.join("\n\n"),
     doneT.length && !left.length ? "Did today feel like a win?" : "Did you get your main thing done today?"].join(BR);
+}
+function dueFromText(text) {
+  const t = String(text).toLowerCase(), now = new Date();
+  if (/\b(today|tonight|this (morning|afternoon|evening))\b/.test(t)) return dayKey(now);
+  if (/\btomorrow\b/.test(t)) return dayKey(addDays(now, 1));
+  if (/\b(this week|by (sunday|the weekend))\b/.test(t)) return dayKey(addDays(now, 6 - (now.getDay() + 6) % 7));
+  return "";
 }
 function promiseFrom(text) {
   const t = String(text).replace(/[\u2018\u2019]/g, "'").trim();
@@ -1686,7 +1811,7 @@ function respond(text, opts) {
   if (m.kind === "rule") out = withFollow(out, m.rule);
   if (A().promises) {
     const p = promiseFrom(text);
-    if (p) { out.promiseOffer = { title: p, cat: guessCat(m, text) }; out.text += BR + fill(L().promiseAsk); }
+    if (p) { out.promiseOffer = { title: p, cat: guessCat(m, text), due: dueFromText(text) }; out.text += BR + fill(L().promiseAsk); }
   }
   out.text = finish(out.text);
   return out;
@@ -1701,9 +1826,12 @@ function previewFor(text) {
   return { name, text: finish(t).split(BR).join("\n\n") };
 }
 function makePromise(p) {
-  S.tasks.push({ id: uid(), title: p.title, cat: CATS[p.cat] ? p.cat : "life", diff: "medium", repeat: "once", done: false, created: Date.now(), from: "future", promise: true });
+  const task = { id: uid(), title: p.title, cat: CATS[p.cat] ? p.cat : "life", diff: "medium", repeat: "once", done: false, created: Date.now(), from: "future", promise: true };
+  if (p.due) task.due = p.due;
+  S.tasks.push(task);
   S.meta.promisesMade = (S.meta.promisesMade || 0) + 1;
-  S.chat.push({ role: "fm", text: finish(fill(L().promiseMade.replace("{p}", () => p.title))), at: Date.now() });
+  const when = p.due ? " " + dueInfo(task).text + "." : "";
+  S.chat.push({ role: "fm", text: finish(fill(L().promiseMade.replace("{p}", () => p.title)) + when), at: Date.now() });
   save(); renderQuests(); renderChat(); renderTrophies(); toast("Promise added to your quests", "xp");
 }
 
@@ -1793,7 +1921,7 @@ function bubble(turn, i, showQuick) {
   let extra = "";
   if (turn.offers && turn.offers.length) extra += '<div class="offers">' + turn.offers.map((o, j) => offerBtn("offer", i, j, o.added, o.title, (CATS[o.cat] || "Life") + " · +" + (DIFF[o.diff] || DIFF.easy).xp + " XP" + (o.added ? " · Added" : ""))).join("") + "</div>";
   if (turn.winOffer) extra += '<div class="offers">' + offerBtn("save-win", i, null, turn.winSaved, turn.winSaved ? "Saved to Wins" : "Save as a win", "") + "</div>";
-  if (turn.promiseOffer) extra += '<div class="offers">' + offerBtn("promise", i, null, turn.promiseSaved, turn.promiseSaved ? "Promise made" : "Hold me to it: " + turn.promiseOffer.title, turn.promiseSaved ? turn.promiseOffer.title : "Adds it to your quests as a promise") + "</div>";
+  if (turn.promiseOffer) extra += '<div class="offers">' + offerBtn("promise", i, null, turn.promiseSaved, turn.promiseSaved ? "Promise made" : "Hold me to it: " + turn.promiseOffer.title, turn.promiseSaved ? turn.promiseOffer.title : "Adds it to your quests as a promise" + (turn.promiseOffer.due ? " · " + dueInfo({ due: turn.promiseOffer.due, repeat: "once" }).text.toLowerCase() : "")) + "</div>";
   if (showQuick && turn.quick && turn.quick.length && !turn.answered) extra += '<div class="quick">' + turn.quick.map(q => '<button class="qr" data-act="quick" data-t="' + i + '" data-v="' + esc(q.value) + '">' + esc(q.label) + "</button>").join("") + "</div>";
   return '<div class="msg fm' + (turn.kind === "checkin" || turn.kind === "evening" ? " checkin" : "") + (turn.unread ? " unread" : "") + '">' + md(turn.text) + extra + tm + "</div>";
 }
@@ -1860,7 +1988,7 @@ $("#chatForm").addEventListener("submit", e => { e.preventDefault(); const v = $
 
 function claudePrompt() {
   const p = S.profile, s = stats(), Lv = levelInfo(s.xp), c = C(), tone = TONES[c.tone] || TONES.plain, a = A();
-  const open = S.tasks.filter(t => t.repeat !== "daily" && !t.done).map(t => "- " + t.title + (t.promise ? " (a promise I made)" : ""));
+  const open = S.tasks.filter(t => t.repeat !== "daily" && !t.done).sort(dueSort).map(t => "- " + t.title + (t.promise ? " (a promise I made)" : "") + (t.due ? " (" + dueInfo(t).text.toLowerCase() + ", " + dueDate(t.due) + ")" : ""));
   const habits = S.tasks.filter(t => t.repeat === "daily").map(t => "- " + t.title + (doneToday(t.id) ? " (done today)" : ""));
   const draft = $("#chatInput").value.trim();
   const lastUser = [...S.chat].reverse().find(t => t.role === "user");
@@ -2104,7 +2232,7 @@ document.addEventListener("click", async e => {
   if (act === "toggle") toggleTask(id);
   else if (act === "ask-del") { S.confirmDel = b.dataset.key; renderQuests(); renderNotes(); }
   else if (act === "cancel-del") { S.confirmDel = null; renderQuests(); renderNotes(); }
-  else if (act === "del-task") { S.confirmDel = null; S.tasks = S.tasks.filter(t => t.id !== id); save(); render(); toast("Quest deleted. Your XP stays."); }
+  else if (act === "edit-task") openQuestSheet(id);
   else if (act === "del-note") { S.confirmDel = null; S.notes = S.notes.filter(n => n.id !== id); save(); render(); toast("Deleted"); }
   else if (act === "pin") { const n = S.notes.find(x => x.id === id); if (n) { n.pinned = !n.pinned; save(); renderNotes(); } }
   else if (act === "filter") { S.noteFilter = b.dataset.k; renderNotes(); }
@@ -2165,7 +2293,7 @@ $("#rsGo").addEventListener("click", () => {
 });
 $("#helpBtn").addEventListener("click", () => openSheet("#sheetHelp"));
 $("#helpBtn2").addEventListener("click", () => openSheet("#sheetHelp"));
-$("#appVersion").textContent = "App updated " + APP_UPDATED;
+$("#appVersion").textContent = "Version " + APP_VERSION + " · updated " + APP_UPDATED;
 
 /* ---------- routing ---------- */
 const TABS = { quests: "Quests", future: "Future Me", notes: "Notes", trophies: "Trophies" };
