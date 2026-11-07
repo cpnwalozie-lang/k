@@ -201,6 +201,9 @@ details.done-list .list{margin-top:8px}
 .aistat{font-weight:600;font-size:14px;color:var(--muted)}
 .aistat.on{color:var(--c-money)}
 .aictl{display:flex;flex-direction:column;gap:10px}
+.aictl[hidden]{display:none}
+.hint.tip{border:1px solid var(--line-2);border-radius:12px;padding:10px 12px}
+.hint.tip a{color:inherit;font-weight:600}
 .msg.note{background:transparent;border:1px dashed var(--line-2);color:var(--muted);font-size:13px}
 .qpill{font-size:12.5px;color:var(--lilac);background:var(--xp-soft);border:1px solid rgba(187,164,242,.35);border-radius:999px;padding:3px 11px}
 .eyebrow{font-size:11.5px;letter-spacing:.12em;text-transform:uppercase;font-weight:600;color:var(--muted)}
@@ -549,7 +552,19 @@ a.btn{text-decoration:none}
       <h3>Real AI</h3>
       <p class="muted">Connect Future Me to Claude so it understands anything you say and talks back like a real conversation, using everything you teach it below. It can also add quests, make promises and save wins for you. Without this, Future Me uses its offline replies.</p>
       <p class="aistat" id="aiStatus">Off</p>
+      <div id="aiSubControls" class="aictl" hidden>
+        <p class="hint">Future Me talks through your own Claude account, so it's covered by your Claude subscription: no API key and nothing extra to pay. It counts towards your normal Claude usage limits. The first time you message, Claude asks you to allow it.</p>
+        <label class="switch"><input type="checkbox" id="aiSubT"> <span>Use real AI for Future Me</span></label>
+        <span class="lbl">Replies</span>
+        <div class="seg" role="radiogroup" aria-label="Reply style">
+          <label><input type="radio" name="aitier" id="ait-default" value="default"><span>Balanced</span></label>
+          <label><input type="radio" name="aitier" id="ait-quick" value="quick"><span>Fastest</span></label>
+          <label><input type="radio" name="aitier" id="ait-complex" value="complex"><span>Deepest</span></label>
+        </div>
+        <p class="hint" id="aiSubCount"></p>
+      </div>
       <div id="aiControls" class="aictl">
+        <p class="hint tip" id="aiSubTip">No extra cost: open the <a href="https://claude.ai/artifact/RjUUxyS552jUKGnN9ZSgbk" target="_blank" rel="noopener">Claude version of this app</a> while signed in to Claude, and Future Me uses your Claude subscription instead. Move your data across with Backup and Restore in Trophies. The API key below is only if you want this website version to use real AI, and it's billed separately.</p>
         <label class="lbl" for="aiKeyIn">Your Claude API key</label>
         <div class="inline"><input class="field" id="aiKeyIn" type="password" autocomplete="off" spellcheck="false" placeholder="sk-ant-…"><button class="btn sm" id="aiSave" type="button">Save</button></div>
         <p class="hint">Saved on this phone only. It's never put in backups and only ever sent to Anthropic. When AI is on, your messages and the app details Future Me needs (quests, habits, mood) go to Anthropic to get a reply. Get a key at platform.claude.com under API keys. API use is pay-as-you-go and separate from a Claude subscription.</p>
@@ -809,7 +824,7 @@ const lowerFirst = s => /^[A-Z][a-z]/.test(s) ? s.charAt(0).toLowerCase() + s.sl
 const endStop = s => { const t = String(s || "").trim(); return !t ? "" : /[.!?]$/.test(t) ? t : t + "."; };
 const firstSentence = s => { const m = String(s || "").match(/^.*?[.!?](?=\s|$)/); return (m ? m[0] : String(s || "")).trim(); };
 const BR = "\n\u2063\n"; /* splits one reply into separate text bubbles */
-const APP_VERSION = 9, APP_UPDATED = "7 November 2026";
+const APP_VERSION = 10, APP_UPDATED = "7 November 2026";
 const APP_URL = /^https?:$/.test(location.protocol) && !/claudeusercontent|claude\.ai/.test(location.hostname) ? location.origin + location.pathname.replace(/index\.html$/, "") : "https://claude.ai/artifact/RjUUxyS552jUKGnN9ZSgbk";
 
 /* ---------- game rules ---------- */
@@ -1209,7 +1224,7 @@ function ensureBrain() {
   if (!ACC[b.account.level]) b.account.level = "firm";
   if (!/^\d\d:\d\d$/.test(b.account.checkinTime)) b.account.checkinTime = "08:00";
   if (!/^\d\d:\d\d$/.test(b.account.eveningTime)) b.account.eveningTime = "20:30";
-  b.ai = Object.assign({ on: true, model: "claude-opus-5-5" }, b.ai || {});
+  b.ai = Object.assign({ on: true, model: "claude-opus-5-5", sub: true, tier: "default" }, b.ai || {});
   if (!Array.isArray(b.goals)) b.goals = DEFAULT_GOAL_NAMES.map(n => makeGoal(GOAL_LIBRARY.find(g => g.name === n)));
   if (!Array.isArray(b.qualities)) b.qualities = DEFAULT_QUALITY_NAMES.map(n => makeQuality(QUALITY_LIBRARY.find(q => q.name === n)));
 }
@@ -2122,9 +2137,13 @@ async function say(text, opts) {
     const mood = opts.quick && opts.quick.indexOf("mood:") === 0 ? +opts.quick.slice(5) : 0;
     if (mood) S.meta.moods[dayKey()] = mood;
     S.awaitWin = false; S.meta.ctx = null;
+    const msg = mood ? "My mood today: " + mood + "/5" : text;
     let Anthropic = null;
-    try { Anthropic = await loadAiSdk(); reply = await aiRespond(mood ? "My mood today: " + mood + "/5" : text); }
-    catch (err) { S.chat.push({ role: "fm", kind: "note", text: aiErrorNote(err, Anthropic) + " Here's my offline reply for now:", at: Date.now() }); }
+    try {
+      if (aiSubActive()) reply = await aiRespondSub(msg);
+      else { Anthropic = await loadAiSdk(); reply = await aiRespond(msg); }
+    }
+    catch (err) { S.chat.push({ role: "fm", kind: "note", text: (err && err.subNote ? err.subNote : aiErrorNote(err, Anthropic)) + " Here's my offline reply for now:", at: Date.now() }); }
   }
   if (!reply) reply = respond(text, opts);
   const parts = splitBubbles(reply.text);
@@ -2417,10 +2436,16 @@ function aiKey() { try { return localStorage.getItem(AI_KEY_STORE) || ""; } catc
 function setAiKey(k) { try { if (k) localStorage.setItem(AI_KEY_STORE, k); else localStorage.removeItem(AI_KEY_STORE); return true; } catch (e) { return false; } }
 const AIcfg = () => S.brain.ai;
 const aiModel = () => AI_MODELS[AIcfg().model] ? AIcfg().model : "claude-opus-5-5";
-const aiActive = () => AI_AVAILABLE && !!AIcfg().on && !!aiKey();
+const aiKeyActive = () => AI_AVAILABLE && !!AIcfg().on && !!aiKey();
+/* Inside Claude, Future Me can use the viewer's own Claude account (their subscription): no key, no extra bill. */
+let aiSample = null, aiSampleTools = false, aiSubBlocked = "";
+const aiSubActive = () => !!aiSample && AIcfg().sub !== false && !aiSubBlocked;
+const aiActive = () => aiSubActive() || aiKeyActive();
+const AI_TIERS = { default: { label: "Balanced", effort: "low" }, quick: { label: "Fastest", effort: null }, complex: { label: "Deepest", effort: "medium" } };
+const aiTier = () => AI_TIERS[AIcfg().tier] ? AIcfg().tier : "default";
 
 /* Everything you've taught Future Me becomes its instructions. */
-function aiPersona() {
+function aiPersona(noTools) {
   const p = S.profile, c = C(), a = A(), tone = TONES[c.tone] || TONES.plain, out = [];
   out.push("You are Future " + p.name + ": " + p.name + " on " + dateLong() + ", the person they are becoming. You are chatting with present-day " + p.name + " inside their personal growth app, like a close friend texting. You already are this person and you have already achieved everything below, so speak from that place: in the first person, with real warmth and belief, as someone who remembers the journey. Make them feel they are already on their way, then help them take the next real step.");
   out.push("", "## Who I am on " + dateLong(), p.vision);
@@ -2447,7 +2472,7 @@ function aiPersona() {
     "- Use **bold** only for a quest name or one key line. No headings.",
     "- Ask a question back when it keeps the conversation going.",
     "- Each of their messages comes with <app_info>: their live quests, habits, streak and mood. Use it naturally; never recite it.",
-    "- You can add quests, make promises and save notes or wins in their app with your tools. Use them when they ask, or when they clearly agree to a plan, and say what you did.");
+    noTools ? "- You can't change their app yourself: if they want a quest or a note, tell them exactly what to add." : "- You can add quests, make promises and save notes or wins in their app with your tools. Use them when they ask, or when they clearly agree to a plan, and say what you did.");
   out.push("", "## Care and honesty",
     "- You are a motivational future self, not a financial adviser, doctor or lawyer. Never promise investment returns or guaranteed income. For tax, legal or regulated work and employer rules, point them to the official source (HMRC, gov.uk, CQC, their employer).",
     "- They live in the UK. Use pounds and UK terms.",
@@ -2587,6 +2612,48 @@ async function aiRespond(text) {
   const reply = said.join("\n\n").trim() || fill("I'm here, {you}. Tell me more?");
   return { text: reply.split(/\n\s*\n/).map(s => s.trim()).filter(Boolean).join(BR), actions };
 }
+/* Future Me through the viewer's own Claude account (only inside Claude). */
+function aiSubTools(actions) {
+  return AI_TOOLS.map(t => ({ name: t.name, description: t.description, inputSchema: t.input_schema,
+    execute: input => { const r = runAiTool({ id: "sub", name: t.name, input }, actions); if (r.is_error) throw new Error(r.content); return JSON.parse(r.content); } }));
+}
+async function aiRespondSub(text) {
+  const actions = [], tier = aiTier();
+  const turns = aiHistory(text).map(m => ({ role: m.role, content: typeof m.content === "string" ? m.content : m.content.map(b => b.text).join("\n\n") }));
+  turns.unshift({ role: "user", content: "<instructions>\n" + aiPersona(!aiSampleTools) + "\n</instructions>\nStay as Future " + S.profile.name + " for the whole chat below and reply only with your texts." });
+  const opts = { cache: false, modelTier: tier };
+  if (AI_TIERS[tier].effort) opts.effort = AI_TIERS[tier].effort;
+  if (aiSampleTools) opts.tools = aiSubTools(actions);
+  let res;
+  try { res = await aiSample(turns, opts); }
+  catch (e) {
+    if (actions.length) { save(); renderQuests(); renderNotes(); renderTrophies(); }
+    const code = e && e.code, partial = e && typeof e.text === "string" ? e.text.trim() : "";
+    if (code === "refused") return { text: fill("I can't go there, {you}. Let's talk about something else."), actions };
+    if (code === "empty_completion") return { text: fill("I'm here, {you}. Tell me more?"), actions };
+    if (partial && (code === "rate_limited" || code === "upstream_error")) return { text: partial.split(/\n\s*\n/).map(x => x.trim()).filter(Boolean).join(BR) + BR + "(I got cut off there. Say that again in a bit?)", actions };
+    let note = "Claude didn't answer just then. Try again in a moment.";
+    if (code === "not_granted") { aiSubBlocked = code; note = "Real AI isn't allowed on this page yet, so I'm on offline replies. To allow it, reopen the app and tap Allow when Claude asks, or use the page's Permissions menu."; }
+    else if (["sampling_disabled", "not_declared", "capability_disabled", "capability_removed"].includes(code)) { aiSubBlocked = code; note = "Real AI isn't available for your Claude account here."; }
+    else if (code === "rate_limited") note = "You've hit your Claude usage limit for now. It resets soon.";
+    else if (code === "session_expired") note = "Sign in to Claude again to turn real AI back on.";
+    else if (code === "prompt_too_large") note = "Our chat got too long for Claude. Clear the chat to start fresh.";
+    throw { subNote: note };
+  }
+  aiUsage().replies += 1;
+  if (actions.length) { save(); renderQuests(); renderNotes(); renderTrophies(); }
+  const reply = String(res.text || "").trim() || fill("I'm here, {you}. Tell me more?");
+  return { text: reply.split(/\n\s*\n/).map(x => x.trim()).filter(Boolean).join(BR), actions };
+}
+if (window.claude && typeof window.claude.use === "function") {
+  window.claude.use("sample").then(fn => {
+    if (!fn) return;
+    aiSample = fn;
+    const show = () => { renderAi(); renderFutureHead(); renderChat(); };
+    show();
+    Promise.resolve(fn.limits()).then(l => { aiSampleTools = !!(l && l.tools); }).catch(() => {}).then(show);
+  }).catch(() => {});
+}
 function aiErrorNote(err, Anthropic) {
   if (!Anthropic) return "I couldn't load the AI part of the app. Check your internet.";
   if (err instanceof Anthropic.AuthenticationError) return "Your Claude API key isn't working. Check it in Teach → Real AI.";
@@ -2600,7 +2667,20 @@ function aiErrorNote(err, Anthropic) {
 
 /* Teach → Real AI */
 function renderAi() {
-  if (!AI_AVAILABLE) { $("#aiStatus").textContent = "Real AI works in the website version of this app."; $("#aiControls").hidden = true; return; }
+  const cfg0 = AIcfg();
+  $("#aiSubControls").hidden = !aiSample;
+  if (aiSample) {
+    $("#aiControls").hidden = true;
+    $("#aiStatus").textContent = aiSubBlocked ? "Not allowed on this page · Future Me is using offline replies" : cfg0.sub !== false ? "On · using your Claude subscription · no API key needed" : "Off · Future Me is using offline replies";
+    $("#aiStatus").className = "aistat" + (aiSubActive() ? " on" : "");
+    $("#aiSubT").checked = cfg0.sub !== false;
+    const tr = $("#ait-" + aiTier()); if (tr) tr.checked = true;
+    const U0 = S.meta.aiUsage, mine0 = U0 && U0.month === dayKey().slice(0, 7);
+    $("#aiSubCount").textContent = "This month: " + (mine0 && U0.replies ? U0.replies + (U0.replies === 1 ? " AI reply" : " AI replies") : "no AI replies yet") + ". Covered by your Claude plan.";
+    return;
+  }
+  if (!AI_AVAILABLE) { $("#aiStatus").textContent = "Real AI works when you open this page in Claude while signed in, or in the website version with an API key."; $("#aiControls").hidden = true; return; }
+  $("#aiControls").hidden = false;
   const k = aiKey(), cfg = AIcfg(), m = AI_MODELS[aiModel()];
   $("#aiStatus").textContent = !k ? "Off · Future Me is using offline replies" : cfg.on ? "On · " + m.label + " · key ending " + k.slice(-4) : "Paused · Future Me is using offline replies";
   $("#aiStatus").className = "aistat" + (k && cfg.on ? " on" : "");
@@ -2618,6 +2698,8 @@ $("#aiSave").addEventListener("click", () => {
   if (!setAiKey(v)) { toast("This browser won't save the key. Turn off private browsing."); return; }
   AIcfg().on = true; save(); renderAi(); renderFutureHead(); renderChat(); toast("Real AI is on", "xp");
 });
+$("#aiSubT").addEventListener("change", () => { AIcfg().sub = $("#aiSubT").checked; save(); renderAi(); renderFutureHead(); renderChat(); });
+$$("input[name=aitier]").forEach(el => el.addEventListener("change", () => { AIcfg().tier = el.value; save(); renderAi(); toast("Replies: " + AI_TIERS[el.value].label); }));
 $("#aiOnT").addEventListener("change", () => { AIcfg().on = $("#aiOnT").checked; save(); renderAi(); renderFutureHead(); renderChat(); });
 $$("input[name=aimodel]").forEach(el => el.addEventListener("change", () => { AIcfg().model = el.value; save(); renderAi(); toast("Future Me will use " + AI_MODELS[el.value].label); }));
 $("#aiForget").addEventListener("click", () => {
